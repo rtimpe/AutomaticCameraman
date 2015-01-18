@@ -1,0 +1,1080 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:__intel_sse2_strlen
+   fun:_ZN5__kmp12dynamic_linkEPKcPKNS_23dynamic_link_descriptorEmmPPv
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN5__kmp12dynamic_linkEPKcPKNS_23dynamic_link_descriptorEmmPPv
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   fun:__intel_sse2_strlen
+   fun:__kmp_env_get
+   fun:_Z30__kmp_register_library_startupv
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   fun:__intel_sse2_strlen
+   fun:__kmp_env_blk_init
+   fun:_Z20__kmp_env_initializePKc
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   fun:__intel_sse2_strlen
+   fun:__kmp_env_blk_init
+   fun:_Z20__kmp_env_initializePKc
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   sched_setaffinity(mask)
+   fun:syscall
+   fun:__kmp_affinity_determine_capable
+   fun:_Z20__kmp_env_initializePKc
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   fun:__intel_sse2_strlen
+   fun:__kmp_env_blk_init
+   fun:_Z25__kmp_asat_env_initializePKc
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   fun:__intel_sse2_strlen
+   fun:__kmp_env_blk_init
+   fun:_Z25__kmp_asat_env_initializePKc
+   fun:__kmp_middle_initialize
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:ippGetCpuFeatures
+   fun:ipp_LoadLibrary
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cv8clipLineENS_5Size_IiEERNS_6Point_IiEES4_
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cv8clipLineENS_5Size_IiEERNS_6Point_IiEES4_
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cv8clipLineENS_5Size_IiEERNS_6Point_IiEES4_
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cv8clipLineENS_5Size_IiEERNS_6Point_IiEES4_
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cv8clipLineENS_5Size_IiEERNS_6Point_IiEES4_
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cv8clipLineENS_5Size_IiEERNS_6Point_IiEES4_
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_ZN2cvL6LineAAERNS_3MatENS_6Point_IiEES3_PKv
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN2cvL14FillConvexPolyERNS_3MatEPKNS_6Point_IiEEiPKvii
+   fun:_ZN2cvL9EllipseExERNS_3MatENS_6Point_IiEENS_5Size_IiEEiiiPKvii
+   fun:_ZN2cvL9ThickLineERNS_3MatENS_6Point_IiEES3_PKviiii
+   fun:_ZN2cv4lineERNS_3MatENS_6Point_IiEES3_RKNS_7Scalar_IdEEiii
+   fun:cvLine
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:__printf_fp
+   fun:vfprintf
+   fun:buffered_vfprintf
+   fun:vfprintf
+   fun:__fprintf_chk
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:__printf_fp
+   fun:vfprintf
+   fun:buffered_vfprintf
+   fun:vfprintf
+   fun:__fprintf_chk
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:__mpn_extract_double
+   fun:__printf_fp
+   fun:vfprintf
+   fun:buffered_vfprintf
+   fun:vfprintf
+   fun:__fprintf_chk
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:__mpn_extract_double
+   fun:__printf_fp
+   fun:vfprintf
+   fun:buffered_vfprintf
+   fun:vfprintf
+   fun:__fprintf_chk
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   write(buf)
+   obj:/lib/libc-2.11.1.so
+   fun:_IO_file_write@@GLIBC_2.2.5
+   fun:_IO_file_xsputn@@GLIBC_2.2.5
+   fun:buffered_vfprintf
+   fun:vfprintf
+   fun:__fprintf_chk
+   fun:_Z4demov
+   fun:main
+}
+
+{
+  cv_named_window_leak
+   Memcheck:Leak
+   ...
+   fun:cvNamedWindow
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   draw_rect_cond
+   Memcheck:Cond
+   ...
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   draw_rect_value8
+   Memcheck:Value8
+   ...
+   fun:_ZN6MatrixIhE8drawRectEffffffiiii
+   fun:_Z4demov
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr16
+   ...
+   fun:omp_get_num_procs
+   fun:_init
+   fun:_dl_init
+   obj:/lib/ld-2.11.1.so
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr16
+   fun:__intel_sse2_strlen
+   fun:__kmp_env_get
+   fun:_Z18__kmp_internal_endv
+   fun:__kmp_internal_end_library
+   fun:__kmp_internal_end_atexit
+   fun:__kmp_internal_end_fini
+   fun:_dl_fini
+   fun:exit
+   fun:(below main)
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr16
+   fun:__intel_sse2_strlen
+   fun:__kmp_env_get
+   fun:_Z18__kmp_internal_endv
+   fun:__kmp_internal_end_library
+   fun:__kmp_internal_end_atexit
+   fun:__kmp_internal_end_fini
+   fun:_dl_fini
+   fun:exit
+   fun:(below main)
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:fpga_reset
+   fun:_Z12capturer_fxnPv
+   fun:start_thread
+   fun:clone
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:getdelim
+   obj:/lib/libselinux.so.1
+   obj:/lib/libselinux.so.1
+   obj:/lib/libselinux.so.1
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:_ZN14FrameDisplayer5startEv
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:fgHintPresent
+   fun:glutInit
+   fun:_Z13displayer_fxnPv
+   fun:start_thread
+   fun:clone
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:fgHintPresent
+   fun:glutInit
+   fun:_Z13displayer_fxnPv
+   fun:start_thread
+   fun:clone
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_ZN2cv10fastMallocEm
+   fun:cvCreateImageHeader
+   fun:_ZN10LiveImages4initEv
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   obj:/usr/lib/libGL.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+   obj:/usr/lib/libGL.so.319.49
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_ZN10LiveImages4initEv
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:fpga_reset
+   fun:_ZN11FpgaTracker5startEv
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:cvEqualizeHist
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_ZN2cv10fastMallocEm
+   fun:cvCreateImageHeader
+   fun:cvCreateImage
+   fun:_Z10get_paramsPP17FpgaTrackerParams
+   fun:_Z10sender_fxnPv
+   fun:start_thread
+   fun:clone
+}
+
+{
+   fpga_reset_param
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:fpga_reset
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr1
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:strlen
+   fun:XStringListToTextProperty
+   fun:fgOpenWindow
+   fun:fgCreateWindow
+   fun:glutCreateWindow
+   fun:_Z13displayer_fxnPv
+   fun:start_thread
+   fun:clone
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:strcpy
+   fun:XStringListToTextProperty
+   fun:fgOpenWindow
+   fun:fgCreateWindow
+   fun:glutCreateWindow
+   fun:_Z13displayer_fxnPv
+   fun:start_thread
+   fun:clone
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ... 
+   fun:cvCreateImage
+   fun:_Z10get_paramsPP17FpgaTrackerParams
+   fun:_Z10sender_fxnPv
+   fun:start_thread
+   fun:clone
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr1
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr1
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_ZN2cv10fastMallocEm
+   fun:cvCreateImageHeader
+   fun:cvCreateImage
+   fun:_ZN14FrameAnnotator4initEv
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_ZN2cv10fastMallocEm
+   fun:cvCreateData
+   fun:cvCreateImage
+   fun:_ZN14FrameAnnotator4initEv
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/lib/libGL.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   obj:/usr/lib/libnvidia-glcore.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   obj:/usr/local/lib/libopencv_highgui.so.2.4.2
+   obj:/usr/local/lib/libopencv_highgui.so.2.4.2
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   fun:XextFindDisplay
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   ...
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   ...
+   obj:/usr/lib/libGL.so.319.49
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:__kmp_create_monitor
+   fun:__kmp_allocate_thread
+   fun:__kmp_allocate_team
+   fun:__kmp_fork_call
+   fun:__kmpc_fork_call
+   fun:e9_ippiResizeSqrPixel_8u_C1R
+   fun:_ZN6MatrixIhE8imResizeEff
+   fun:_ZN13TripleTracker13init_trackersEPP7TrackerPP13TrackerParamsPP9FtrParamsPP9ClfParamsiiPiiiiP9_IplImage
+   fun:_ZN13SingleTracker4initEiiiiiP9_IplImage
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:e9_ippiResizeSqrPixel_8u_C1R
+   fun:_ZN6MatrixIhE8imResizeEff
+   fun:_ZN13TripleTracker13init_trackersEPP7TrackerPP13TrackerParamsPP9FtrParamsPP9ClfParamsiiPiiiiP9_IplImage
+   fun:_ZN13SingleTracker4initEiiiiiP9_IplImage
+}
+
+{
+   sqr_pixel_leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:e9_ippiResizeSqrPixel_8u_C1R
+   fun:_ZN6MatrixIhE8imResizeEff
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.2.5
+   obj:/usr/lib/libgomp.so.1.0.0
+   fun:_ZN3Ftr7computeER9SampleSetRKSt6vectorIPS_SaIS3_EE
+   fun:_ZN9ClfStrong6updateER9SampleSetS1_
+   fun:_ZN7Tracker4initEP6MatrixIhEP13TrackerParamsP9ClfParams
+   fun:_ZN13TripleTracker13init_trackersEPP7TrackerPP13TrackerParamsPP9FtrParamsPP9ClfParamsiiPiiiiP9_IplImage
+   fun:_ZN13SingleTracker4initEiiiiiP9_IplImage
+   fun:_Z13runtime_trackP17TrackerControllerP14FrameAnnotatorP11VideoImagesP9FramePool
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.2.5
+   obj:/usr/lib/libgomp.so.1.0.0
+   fun:_ZN3Ftr7computeER9SampleSetRKSt6vectorIPS_SaIS3_EE
+   fun:_ZN9ClfStrong6updateER9SampleSetS1_
+   fun:_ZN7Tracker4initEP6MatrixIhEP13TrackerParamsP9ClfParams
+   fun:_ZN13TripleTracker13init_trackersEPP7TrackerPP13TrackerParamsPP9FtrParamsPP9ClfParamsiiPiiiiP9_IplImage
+   fun:_ZN13SingleTracker4initEiiiiiP9_IplImage
+   fun:_Z13runtime_trackP17TrackerControllerP14FrameAnnotatorP11VideoImagesP9FramePool
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_ZN3Ftr7computeER9SampleSetRKSt6vectorIPS_SaIS3_EE
+   fun:_ZN9ClfStrong6updateER9SampleSetS1_
+   fun:_ZN7Tracker4initEP6MatrixIhEP13TrackerParamsP9ClfParams
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   obj:/usr/lib/libGL.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   obj:/usr/lib/libGL.so.319.49
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   ...
+   obj:/usr/lib/libGL.so.319.49
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   ...
+   obj:/usr/lib/libGL.so.319.49
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.2.5
+   obj:/usr/lib/libgomp.so.1.0.0
+   fun:_ZN3Ftr7computeER9SampleSetRKSt6vectorIPS_SaIS3_EE
+   fun:_ZN9ClfStrong6updateER9SampleSetS1_
+   fun:_ZN7Tracker4initEP6MatrixIhEP13TrackerParamsP9ClfParams
+   fun:_ZN13TripleTracker13init_trackersEPP7TrackerPP13TrackerParamsPP9FtrParamsPP9ClfParamsiiPiiiiP9_IplImage
+   fun:_ZN13TripleTracker4initEiiiiiiiP9_IplImage
+   fun:_Z13runtime_trackP17TrackerControllerP14FrameAnnotatorP11VideoImagesP9FramePool
+   fun:main
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_ZN2cv10fastMallocEm
+   fun:cvCreateImageHeader
+   fun:cvCreateImage
+   fun:_ZN5BgSub4initEP9_IplImageS1_S1_
+   fun:_ZN12BgSubTracker4initEiiifP9_IplImageS1_S1_
+   fun:_Z13runtime_trackP17TrackerControllerP14FrameAnnotatorP11VideoImagesP9FramePool
+   fun:main
+}
+

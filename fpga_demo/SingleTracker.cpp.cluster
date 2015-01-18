@@ -1,0 +1,219 @@
+#include "SingleTracker.h"
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+SingleTracker::SingleTracker(int id, BgSub *bgSub) {
+	_numTrackers = 0;
+	_id = id;
+	_bgSub = bgSub;
+	_numClusters = 0;
+}
+
+
+SingleTracker::~SingleTracker() {
+	for (int i=0; i < _numTrackers; i++) {
+		delete _tr[i]->_clfparams->_ftrParams;
+		delete _tr[i]->_clfparams;
+		delete _tr[i]->_trparams;
+		delete _tr[i];
+	}
+}
+
+
+void SingleTracker::draw_short_term(IplImage *img){
+	// Draw a point representing the predicted location
+
+	for (int i = 0; i < _numTrackers; i++) {
+		draw_rect(img, _tr[i]->_x*_tr[i]->_scale, _tr[i]->_y*_tr[i]->_scale, 
+			_tr[i]->_w*_tr[i]->_scale, _tr[i]->_h*_tr[i]->_scale, 1, 
+			_tr[i]->_trparams->_boxcolor[0], _tr[i]->_trparams->_boxcolor[1], 
+			_tr[i]->_trparams->_boxcolor[2], 255);
+	}
+
+	for (int i = 0; i < _numClusters; i++) {
+		draw_rect(img, _clusters[i]._x - (10*_clusters[i]._confidence)/2, 
+			_clusters[i]._y - (10*_clusters[i]._confidence)/2, 
+			(10*_clusters[i]._confidence), (10*_clusters[i]._confidence), 1, 
+			i == _numClusters-1 ? 0 : 128, i == _numClusters-1 ? 0 : 128, 255, 255);
+	}
+}		
+
+
+bool SingleTracker::init_trackers(Tracker *tr[], TrackerParams *trparams[], 
+	FtrParams *ftrparams[], ClfParams *clfparams[], int centerX, int centerY, 
+	int dim[], int numTrackers, int numFeats, int numSelFeats, IplImage *gray) {
+	Matrixu initImg;
+
+	// Create tracker and parameters
+	for (int i=0; i < numTrackers; i++) {
+		ftrparams[i] = new FtrParams();
+		clfparams[i] = new ClfParams();
+		trparams[i] = new TrackerParams();
+		tr[i] = new Tracker();
+	}
+
+	// The image frame will be divided by this value in hardware.
+	for (int i=0; i < numTrackers; i++) {
+		float scale = dim[i]/((float)TRACKING_WIN_DIM);
+
+		ftrparams[i]->_minNumRect = 2;
+		ftrparams[i]->_maxNumRect = 6;
+		ftrparams[i]->_width = TRACKING_WIN_DIM; 	// FPGA will always need to 
+		ftrparams[i]->_height = TRACKING_WIN_DIM;	// calculate using this size
+
+		clfparams[i]->_numSel = numSelFeats;
+		clfparams[i]->_numFeat = numFeats;
+		clfparams[i]->_ftrParams = ftrparams[i];
+
+		trparams[i]->_init_negnumtrain	= 65;
+		trparams[i]->_init_postrainrad	= 3.0f;
+		trparams[i]->_srchwinsz = min((float)MAX_SEARCH_RADIUS, MIN_SEARCH_RADIUS + 4*MIN_SEARCH_RADIUS*expf(-scale));
+		trparams[i]->_negnumtrain = 65;
+		trparams[i]->_posradtrain = max(2.0f, 4.0f/log2f(max(2.0f, log2f(scale))));
+		trparams[i]->_initScale = scale;
+		trparams[i]->_initX = max(0.0f, centerX/scale - TRACKING_WIN_DIM/2);	
+		trparams[i]->_initY = max(0.0f, centerY/scale - TRACKING_WIN_DIM/2);
+		trparams[i]->_initW = TRACKING_WIN_DIM;		// FPGA will always need to 
+		trparams[i]->_initH = TRACKING_WIN_DIM;		// calculate using this size
+
+		if (i == 1) {
+			trparams[0]->_boxcolor[0] = 25;
+			trparams[0]->_boxcolor[1] = 25;
+			trparams[0]->_boxcolor[2] = 204;
+		}
+		else if (i == 2) {
+			trparams[1]->_boxcolor[0] = 25;
+			trparams[1]->_boxcolor[1] = 204;
+			trparams[1]->_boxcolor[2] = 25;
+		}
+	}
+
+	// Initialize on the initial frame
+	for (int i=0; i < numTrackers; i++) {
+		initImg.Resize(gray->height, gray->width);
+		initImg.GrayIplImage2Matrix(gray);
+		initImg = initImg.imResize(1.0f/trparams[i]->_initScale); // Scale to the correct size
+		tr[i]->init(&initImg, trparams[i], clfparams[i]);
+	}
+
+	return true;
+}
+
+
+bool SingleTracker::init(int x, int y, int dim, int numFeats, int numSelFeats, IplImage *gray) {
+	Matrixu initImg;
+	TrackerParams *trparams[1];
+	ClfParams *clfparams[1];
+	FtrParams *ftrparams[1];
+	int dimArr[1] = {dim};
+
+	// Initialize the Trackers
+	if (!init_trackers(_tr, trparams, ftrparams, clfparams, x, y, dimArr, 1, 
+		numFeats, numSelFeats, gray))
+		return false;
+
+	// Initialize locals
+	_numTrackers = 1;
+
+	return true;
+}
+
+
+void SingleTracker::trackers_updated(vector<Cluster *> *preds, map<int, float> *attribs) {
+	float confid, maxConfid;
+	int maxCluster;
+	int x, y;
+	bool added;
+
+	// Cluster the predictions
+	_numClusters = 0;
+	for (int j=0; j < NUM_PRED; ++j) {
+		added = false;
+		confid = (_tr[0]->_predScore[j] - _tr[0]->_predMean)/sqrt(_tr[0]->_predVar); // Z-score	
+		x = (_tr[0]->_predX[j] + _tr[0]->_w/2)*_tr[0]->_scale; // Scale the x,y into the 
+		y = (_tr[0]->_predY[j] + _tr[0]->_h/2)*_tr[0]->_scale; // unresized coordinate space
+		// Find a cluster to which we should add this prediction
+		for (int i=0; i < _numClusters && j < NUM_PRED-1; ++i) {
+			if (DIST(x, y, _clusters[i]._x/_clusters[i]._num, _clusters[i]._y/_clusters[i]._num) <= CLUSTER_THRESH*CLUSTER_THRESH) {
+				_clusters[i]._num += 1;
+				_clusters[i]._confidence += confid;
+				_clusters[i]._x += x;
+				_clusters[i]._y += y;
+				added = true;
+				break;
+			}
+		}
+		// No cluster found, add a new cluster
+		if (!added) {
+			_clusters[_numClusters]._num = 1;
+			_clusters[_numClusters]._confidence = confid;
+			_clusters[_numClusters]._x = x;
+			_clusters[_numClusters]._y = y;
+			_numClusters++;
+		}
+	}
+
+	// Find the max cluster
+	maxCluster = 0;
+	maxConfid = -1;
+	for (int i=0; i < _numClusters; ++i) {
+		// Average the x,y locations and confidence
+		_clusters[i]._x = _clusters[i]._x/_clusters[i]._num;
+		_clusters[i]._y = _clusters[i]._y/_clusters[i]._num;
+		_clusters[i]._confidence = _clusters[i]._confidence/_clusters[i]._num;
+		// Adjust the cluster confidence according to amount of background
+		// change in the vicinity of the cluster location. 
+		_bgSub->get_center_of_mass(_clusters[i]._x - CLUSTER_THRESH, _clusters[i]._y - CLUSTER_THRESH, 
+			CLUSTER_THRESH*2, CLUSTER_THRESH*2, &x, &y, &confid);
+		if (confid < 0.02)
+			confid = 0.02;
+		_clusters[i]._confidence *= confid;
+		if (_clusters[i]._confidence > maxConfid) {
+			maxConfid = _clusters[i]._confidence;
+			maxCluster = i;
+		}
+//printf("  cluster %d: (%d) %.03f %.03f\n", i, _clusters[i]._num, _clusters[i]._confidence, confid);
+	}
+
+//if (_clusters[maxCluster]._x != _clusters[_numClusters-1]._x || _clusters[maxCluster]._y != _clusters[_numClusters-1]._y) printf("                            using non-max cluster\n");
+	// Use the max cluster as our prediction
+	_tr[0]->_x = (_clusters[maxCluster]._x/_tr[0]->_scale) - _tr[0]->_w/2; // Scale the x,y into the 
+	_tr[0]->_y = (_clusters[maxCluster]._y/_tr[0]->_scale) - _tr[0]->_h/2; // resized coordinate space
+	preds->push_back(&_clusters[maxCluster]);
+
+//usleep(1000*1000);
+}
+
+
+void SingleTracker::new_location(Cluster *cluster) {
+	float sX, sY, confid;
+	int ignore;
+
+	// Correct if prediction is too far from the location
+	for (int i = 0; i < _numTrackers; i++) {
+		sX = cluster->_x/_tr[i]->_scale; // Bring x, y coordinates into 
+		sY = cluster->_y/_tr[i]->_scale; // resized coodinate space
+		if (DIST(_tr[i]->_x + _tr[i]->_w/2, _tr[i]->_y + _tr[i]->_h/2, sX, sY) > (0.5*_tr[i]->_w)*(0.5*_tr[i]->_w)) {
+//printf("correcting x:%d _tr[i]->_x:%d diffx:%d halfdim:%d\n", (int)sX, _tr[i]->_x, (int)(_tr[i]->_x + _tr[i]->_w/2 - sX), (int)(0.5*_tr[i]->_w));
+			_tr[i]->_x = sX - _tr[i]->_w/2;
+			_tr[i]->_y = sY - _tr[i]->_h/2;
+			_tr[i]->_train = 1;
+		}
+
+		_bgSub->get_center_of_mass(_tr[i]->_x - CLUSTER_THRESH, _tr[i]->_x - CLUSTER_THRESH, 
+			CLUSTER_THRESH*2, CLUSTER_THRESH*2, &ignore, &ignore, &confid);
+		if (confid > 0.1 || DIST(_tr[i]->_x, _tr[i]->_y, _tr[i]->_lastX, _tr[i]->_lastY) > CLUSTER_THRESH) {
+			_tr[i]->_train = 1;
+			_tr[i]->_lastX = _tr[i]->_x;
+			_tr[i]->_lastY = _tr[i]->_y;
+		}
+		else {
+			_tr[i]->_train = 0;
+		}
+//if (_tr[i]->_train) printf("                                                           training\n");
+	}
+}
+
+
+

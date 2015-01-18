@@ -1,0 +1,37 @@
+#ifndef SINGLE_TRACKER_PUBLIC
+#define SINGLE_TRACKER_PUBLIC
+
+#include "Public.h"
+#include "MetaTracker.h"
+#include "BgSub.h"
+
+#define CLUSTER_THRESH 6
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SingleTracker : public MetaTracker
+{
+public:
+	SingleTracker(int id, BgSub *bgSub);
+	~SingleTracker();
+	bool init(int x, int y, int dim, int numFeats, int numSelFeats, IplImage *gray);
+	bool init_trackers(Tracker *tr[], TrackerParams *trparams[], FtrParams *ftrparams[], ClfParams *clfparams[],
+		int centerX, int centerY, int dim[], int numTrackers, int numFeats, int numSelFeats, IplImage *gray);
+	virtual bool draw_long_term(IplImage *img) { return false; };
+	virtual void draw_short_term(IplImage *img);
+	virtual void new_frame(Frame *frame) {};
+	virtual void trackers_updated(vector<Cluster *> *preds, map<int, float> *attribs);
+	virtual void new_location(Cluster *cluster);
+
+	BgSub *_bgSub;										// Background subtraction
+	Cluster _clusters[NUM_PRED+1];						// Clusters
+	int _numClusters;									// Number of clusters
+};
+
+
+
+#endif
+
+
+

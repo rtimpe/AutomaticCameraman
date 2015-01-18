@@ -1,0 +1,173 @@
+#include "LibraryTracker.h"
+
+
+////////////////////////////////////////////////////////////////////////////////
+LibraryTracker::LibraryTracker(int id) : BaseTracker(id) {
+	_numTrackers = 0;
+}
+
+
+bool LibraryTracker::init(int x, int y, int dim, int numFeats, int numSelFeats, IplImage *gray) {
+	// Initialize locals
+	_trainCount = 0;
+	_numTrackers = 1;
+	int dimArr[1] = { dim };
+	int xArr[1] = { x };
+	int yArr[1] = { y };
+	float lRateArr[1] = { 0.85f };
+
+	// Initialize the Tracker
+	if (!init_trackers(_tr, xArr, yArr, dimArr, lRateArr, _numTrackers, numFeats, numSelFeats, gray))
+		return false;
+
+	// Crop a window patch at the selected location
+	IplImage *tmp = cvCreateImage(cvSize(gray->width/_tr[0]->_scale, gray->height/_tr[0]->_scale), IPL_DEPTH_8U, 1); 
+	cvResize(gray, tmp);
+	cvSetImageROI(tmp, cvRect((x - dim/2)/_tr[0]->_scale, (y - dim/2)/_tr[0]->_scale, TRACKING_WIN_DIM, TRACKING_WIN_DIM));
+	cvCopy(tmp, _tr[0]->_trparams->_tpl, NULL);
+	cvReleaseImage(&tmp);
+
+	return true;
+}
+
+
+void LibraryTracker::trackers_updated(vector<Cluster *> *preds, map<int, float> *attribs, 
+	IplImage *gray, IplImage *dispImg) {
+	float confid, zscore;
+	int ndx;
+	char resname[50];
+	char tplname[50];
+	int resNdxX;
+	int resNdxY;
+	double minVal; 
+	double maxVal; 
+	CvPoint minLoc; 
+	CvPoint maxLoc;
+	IplImage *res;
+	IplImage *mask;
+	IplImage *tmp;
+
+	for (int t=0; t < _numTrackers; ++t) {
+		// Update the location (may be corrected later)
+		_tr[t]->_x = _tr[t]->_predX[NUM_PRED-1];
+		_tr[t]->_y = _tr[t]->_predY[NUM_PRED-1];
+
+		// Find the max prediction at least 5 pixels away from the max. Note,
+		// the predictions are already sorted ascending.
+		ndx = NUM_PRED-1;
+		for (int j=NUM_PRED-2; j >= 0; --j) {
+			if (DIST(_tr[t]->_predX[j], _tr[t]->_predY[j], 
+					_tr[t]->_predX[NUM_PRED-1], _tr[t]->_predY[NUM_PRED-1]) >= 
+						(5*_tr[t]->_scale)*(5*_tr[t]->_scale)) {
+				ndx = j;
+				break;
+			}
+		}
+		confid = (_tr[t]->_predScore[NUM_PRED-1] - _tr[t]->_predScore[ndx])/
+					sqrt(_tr[t]->_predVar);
+		zscore = (_tr[t]->_predScore[NUM_PRED-1] - _tr[t]->_predMean)/
+					sqrt(_tr[t]->_predVar);
+
+		// Calculate the NCC of the tracker
+		tmp = cvCreateImage(cvSize(gray->width/_tr[t]->_scale, gray->height/_tr[t]->_scale), IPL_DEPTH_8U, 1); 
+		cvResize(gray, tmp);
+		res = cvCreateImage(cvSize(tmp->width - TRACKING_WIN_DIM + 1, tmp->height - TRACKING_WIN_DIM + 1), IPL_DEPTH_32F, 1);
+		mask = cvCreateImage(cvSize(tmp->width - TRACKING_WIN_DIM + 1, tmp->height - TRACKING_WIN_DIM + 1), IPL_DEPTH_8U, 1);
+		cvMatchTemplate(tmp, _tr[t]->_trparams->_tpl, res, CV_TM_CCORR_NORMED);
+		for (int yy=0; yy < mask->height; ++yy)
+			for (int xx=0; xx < mask->width; ++xx)
+				mask->imageData[yy*mask->width + xx] = 
+					(xx >= _tr[t]->_x - _tr[t]->_trparams->_srchwinsz && 
+						xx < _tr[t]->_x + _tr[t]->_w + _tr[t]->_trparams->_srchwinsz && 
+						yy >= _tr[t]->_y - _tr[t]->_trparams->_srchwinsz && 
+						yy < _tr[t]->_y + _tr[t]->_h + _tr[t]->_trparams->_srchwinsz ? 0 : 255);
+		cvMinMaxLoc(res, &minVal, &maxVal, &minLoc, &maxLoc, mask);
+		cvReleaseImage(&tmp);
+		cvReleaseImage(&mask);
+
+		cvRectangle(res, 
+			cvPoint(maxLoc.x - _tr[t]->_trparams->_tpl->width/2, maxLoc.y - _tr[t]->_trparams->_tpl->height/2), 
+			cvPoint(maxLoc.x + _tr[t]->_trparams->_tpl->width/2, maxLoc.y + _tr[t]->_trparams->_tpl->height/2), 
+			cvScalar(0, 0, 0, 255), 2, 8, 0);
+
+		// If max tracker and max NCC locations are close enough, then train
+		if (maxVal > 0.98 || DIST(maxLoc.x, maxLoc.y, _tr[t]->_x, _tr[t]->_y) < (7/_tr[t]->_scale)*(7/_tr[t]->_scale)) {
+			_tr[t]->_x = maxLoc.x;
+			_tr[t]->_y = maxLoc.y;
+			_tr[t]->_clfparams->_lRate = 0.85f;
+			_tr[t]->_train = 1;
+			_tr[t]->_avg = _tr[t]->_avg + (confid - _tr[t]->_avg)/(++_tr[t]->_count);
+			_trainCount++;
+
+			if (_trainCount > TRAIN_THRESH) {
+				cvRectangle(dispImg, 
+					cvPoint(maxLoc.x*_tr[t]->_scale, maxLoc.y*_tr[t]->_scale), 
+					cvPoint((maxLoc.x + _tr[t]->_trparams->_tpl->width)*_tr[t]->_scale, (maxLoc.y + _tr[t]->_trparams->_tpl->height)*_tr[t]->_scale), 
+					cvScalar((50*_id+0) % 256, (20*_id+100) % 256, (176*_id+150) % 256, 255), 1, 8, 0);
+				cvRectangle(dispImg, 
+					cvPoint(_tr[t]->_x*_tr[t]->_scale, _tr[t]->_y*_tr[t]->_scale), 
+					cvPoint((_tr[t]->_x + _tr[t]->_w)*_tr[t]->_scale, (_tr[t]->_y + _tr[t]->_h)*_tr[t]->_scale), 
+					cvScalar((50*_id+0) % 256, (20*_id+100) % 256, (176*_id+150) % 256, 255), 2, 8, 0);
+
+				// Provide the prediction
+				_clusters[t]._confidence = confid*zscore;
+				_clusters[t]._num = 1;
+				_clusters[t]._scale = 1.0;
+				_clusters[t]._x = (_tr[t]->_x + _tr[t]->_w/2)*_tr[t]->_scale;
+				_clusters[t]._y = (_tr[t]->_y + _tr[t]->_h/2)*_tr[t]->_scale;
+				preds->push_back(&_clusters[t]);
+			}
+		}
+		else {
+			_tr[t]->_train = 0;
+		}
+
+/*
+		cvRectangle(dispImg, 
+			cvPoint(maxLoc.x*_tr[t]->_scale, maxLoc.y*_tr[t]->_scale), 
+			cvPoint((maxLoc.x + _tr[t]->_trparams->_tpl->width)*_tr[t]->_scale, (maxLoc.y + _tr[t]->_trparams->_tpl->height)*_tr[t]->_scale), 
+			cvScalar((50*_id+0) % 256, (20*_id+100) % 256, (176*_id+150) % 256, 255), 1, 8, 0);
+		cvRectangle(dispImg, 
+			cvPoint(_tr[t]->_x*_tr[t]->_scale, _tr[t]->_y*_tr[t]->_scale), 
+			cvPoint((_tr[t]->_x + _tr[t]->_w)*_tr[t]->_scale, (_tr[t]->_y + _tr[t]->_h)*_tr[t]->_scale), 
+			cvScalar((50*_id+0) % 256, (20*_id+100) % 256, (176*_id+150) % 256, 255), 2, 8, 0);
+*/
+		resNdxX = _tr[t]->_x;
+		resNdxY = _tr[t]->_y;
+		printf("    %d %d: nccval: (%03d,%03d) %f\n", _id, t, 
+			(int)((maxLoc.x + _tr[t]->_trparams->_tpl->width/2)*_tr[t]->_scale), 
+			(int)((maxLoc.y + _tr[t]->_trparams->_tpl->height/2)*_tr[t]->_scale), 
+			maxVal);
+		printf("    %d %d: tr val: (%03d,%03d) %f  %f  %f = %f (%d) [%f]\n", _id, t, 
+			(int)((_tr[t]->_x + _tr[t]->_w/2)*_tr[t]->_scale), 
+			(int)((_tr[t]->_y + _tr[t]->_h/2)*_tr[t]->_scale), 
+			*((float*)(&res->imageData[resNdxY*res->width*4 + resNdxX*4])), 
+			confid, zscore, confid*zscore, _tr[t]->_train, _tr[t]->_avg);
+
+		sprintf(tplname, "tpl%02d%02d", _id, t);
+		sprintf(resname, "res%02d%02d", _id, t);
+		cvNamedWindow(tplname, CV_WINDOW_AUTOSIZE);
+		cvNamedWindow(resname, CV_WINDOW_AUTOSIZE);
+		cvShowImage(tplname, _tr[t]->_trparams->_tpl);
+		cvShowImage(resname, res);
+	}
+}
+
+
+void LibraryTracker::new_location(Cluster *cluster, IplImage *dispImg) {
+	// Update location to match selected (if not matched/training).
+	for (int t=0; t < _numTrackers; ++t) {
+		if (_tr[t]->_train == 0) {
+			_tr[t]->_x = (cluster->_x*cluster->_scale/_tr[t]->_scale);
+			_tr[t]->_y = (cluster->_y*cluster->_scale/_tr[t]->_scale);
+		}
+		else if (DIST(cluster->_x*cluster->_scale/_tr[t]->_scale, 
+					cluster->_y*cluster->_scale/_tr[t]->_scale, 
+					_tr[t]->_x, _tr[t]->_y) > TRACKING_WIN_DIM*TRACKING_WIN_DIM) {
+			_tr[t]->_train = 0;
+			_trainCount--;
+		}
+	}
+}
+
+
