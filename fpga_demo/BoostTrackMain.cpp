@@ -15,7 +15,7 @@
 #include <signal.h>
 
 int end = 0;
-char fingersTrackerSer[] = "trained_fingers_up_5000.txt";
+char fingersTrackerSer[] = "res/trained_fingers_up_5000.txt";
 
 /*
 char prefix[] = "../../milboosttracker-master/faceocc/imgs/";
