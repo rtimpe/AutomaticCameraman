@@ -1,4 +1,5 @@
 #include "FpgaTracker.h"
+#include "timer.h"
 #include <string.h>
 #include <algorithm>
 #include <pthread.h>

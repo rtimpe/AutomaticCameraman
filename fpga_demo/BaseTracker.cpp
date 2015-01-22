@@ -102,7 +102,7 @@ bool BaseTracker::init_trackers(Tracker *tr[], int centerX[], int centerY[],
 bool BaseTracker::init(int centerX, int centerY, int dim, int numFeats, 
 	int numSelFeats, IplImage *gray) {
 	// Initialize locals
-	int dimArr[3] = { dim*pow(2, -1), dim*pow(1.5, -1), dim };
+	int dimArr[3] = { dim*pow(2.0, -1), dim*pow(1.5, -1), dim };
 	int xArr[3] = { centerX - 3, centerX + 3, centerX };
 	int yArr[3] = { centerY - 3, centerY + 3, centerY };
 	float lRateArr[3] = { 0.45f, 0.65f, 0.85f };
@@ -190,14 +190,14 @@ bool BaseTracker::trackers_updated(vector<Cluster *> *preds, map<int, float> *at
 	// Update all the trackers
 	for (int t=0; t < 3; ++t) {
 		var = _tr[t]->_avg2 - _tr[t]->_avg*_tr[t]->_avg;
-		unstable = unstable || (var > 50) || (_tr[t]->_predScore[NUM_PRED-1]/pow(2, 24) < _tr[t]->_avg);
+		unstable = unstable || (var > 50) || (_tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24) < _tr[t]->_avg);
 		_tr[t]->_x = _tr[t]->_predX[NUM_PRED-1];
 		_tr[t]->_y = _tr[t]->_predY[NUM_PRED-1];
 		_tr[t]->_clfparams->_lRate = lRateArr[t];
 		_tr[t]->_train = 1;
-		_tr[t]->_avg = k*(_tr[t]->_predScore[NUM_PRED-1]/pow(2, 24)) + (1.0-k)*_tr[t]->_avg;
-		_tr[t]->_avg2 = k*(_tr[t]->_predScore[NUM_PRED-1]/pow(2, 24))*(_tr[t]->_predScore[NUM_PRED-1]/pow(2, 24)) + (1.0-k)*_tr[t]->_avg2;
-		maxScore += _tr[t]->_predScore[NUM_PRED-1]/pow(2, 24);
+		_tr[t]->_avg = k*(_tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24)) + (1.0-k)*_tr[t]->_avg;
+		_tr[t]->_avg2 = k*(_tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24))*(_tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24)) + (1.0-k)*_tr[t]->_avg2;
+		maxScore += _tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24);
 	}
 	maxScore = maxScore/3.0f;
 

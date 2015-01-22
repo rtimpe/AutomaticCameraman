@@ -1,4 +1,5 @@
 #include "FramePool.h"
+#include "timer.h"
 #include <assert.h>
 
 TS_INIT(framepool, 4);

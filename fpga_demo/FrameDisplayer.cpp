@@ -7,6 +7,10 @@
 FrameDisplayer *fd;
 
 
+extern int save_images;
+extern char * images_folder;
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 GLvoid key_press(unsigned char key, int x, int y) {
@@ -83,6 +87,19 @@ GLvoid idle() {
 		fd->_lastBgFrameNum = frameNum;
 		glBindTexture(GL_TEXTURE_2D, fd->textureId0);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fd->_width, fd->_height, GL_BGR, GL_UNSIGNED_BYTE, frame->_bgr->imageData);
+
+		//-------------------------------------------------------------
+		// Save image (Consider moving this somewhere better)
+	    if (save_images) {
+	        char filename[64];
+	        sprintf(filename, "%s/image_%d.png",
+	                images_folder,
+	                frameNum);
+
+	        cvSaveImage(filename,
+	                    frame->_bgr);
+	    }
+
 		fd->_bgPool->release(frame);
 	}
 
@@ -116,7 +133,7 @@ void *displayer_fxn(void *arg) {
 
 	// Setup both images (textures)
 	glGenTextures(1, &fd->textureId0);
-	glGenTextures(1, &fd->textureId1);
+	//glGenTextures(1, &fd->textureId1);
 
 	// textureId0 is the background (video frame), in 3 channels (no alpha)
 	img = cvCreateImage(cvSize(1280, 720), IPL_DEPTH_8U, 3);

@@ -1,4 +1,5 @@
 #include "FrameAnnotator.h"
+#include <timer.h>
 
 TS_INIT(annotator, 2);
 TC_INIT(annotator, 1);
@@ -43,10 +44,13 @@ TS_STAMP(annotator, 0);
 		// Update the pool
 		frame = fa->_pool->update_next(frame, c, false);
 
-		// Wait for changes
-		fa->_lastTracked = fa->_controller->tracked(fa->_lastTracked, &x, &y, true);
-		if (fa->_lastTracked < 0)
-			break;
+		if (NULL != fa->_controller)
+		{
+		    // Wait for changes
+		    fa->_lastTracked = fa->_controller->tracked(fa->_lastTracked, &x, &y, true);
+		    if (fa->_lastTracked < 0)
+			    break;
+		}
 
 		// Clear the long term image (if necessary)
 		if (clear)

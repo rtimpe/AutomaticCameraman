@@ -1,4 +1,5 @@
 #include "VideoImages.h"
+#include "timer.h"
 
 TS_INIT(liveimages, 4);
 TC_INIT(liveimages, 2);
