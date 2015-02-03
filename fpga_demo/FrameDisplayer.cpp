@@ -78,27 +78,22 @@ GLvoid reshape(GLint w, GLint h) {
 }
 
 
+
+
 GLvoid idle() {
 	Frame *frame;
 	int frameNum;
+
+	static IplImage * src1 = 0;
+	static IplImage * src2 = 0;
+	static IplImage * dst = 0;
+
 	// Update the textures, remember the background image has no alpha
 	frameNum = fd->_bgPool->acquire(&frame, fd->_lastBgFrameNum, false, false);
 	if (frameNum > 0 && frameNum != fd->_lastBgFrameNum) {
 		fd->_lastBgFrameNum = frameNum;
 		glBindTexture(GL_TEXTURE_2D, fd->textureId0);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fd->_width, fd->_height, GL_BGR, GL_UNSIGNED_BYTE, frame->_bgr->imageData);
-
-		//-------------------------------------------------------------
-		// Save image (Consider moving this somewhere better)
-	    if (save_images) {
-	        char filename[64];
-	        sprintf(filename, "%s/image_%d.png",
-	                images_folder,
-	                frameNum);
-
-	        cvSaveImage(filename,
-	                    frame->_bgr);
-	    }
 
 		fd->_bgPool->release(frame);
 	}
@@ -108,6 +103,7 @@ GLvoid idle() {
 		fd->_lastFgFrameNum = frameNum;
 		glBindTexture(GL_TEXTURE_2D, fd->textureId1);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fd->_width, fd->_height, GL_BGRA, GL_UNSIGNED_BYTE, frame->_bgr->imageData);
+
 		fd->_fgPool->release(frame);
 	}
 
@@ -157,6 +153,9 @@ void *displayer_fxn(void *arg) {
 
 	// Start loop (never returns from this)
 	glutMainLoop();
+
+	// Terminate program at this point
+    printf("TERMINATOR X!\n");
 
 	return NULL;
 }

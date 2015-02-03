@@ -5,6 +5,8 @@
 #include "FrameDisplayer.h"
 #include "GridAnnotator.h"
 #include "GridController.h"
+#include "DebugLogger.h"
+#include "FrameSaver.h"
 #include <riffa.h>
 #include <execinfo.h>
 #include <signal.h>
@@ -13,9 +15,10 @@
 
 // Forward declarations for functions
 void handle_stop(void);
-void runtime_logic(FrameAnnotator *annotator,
-                   VideoImages *video,
-                   FramePool *videoPool);
+void runtime_logic(FrameAnnotator * annotator,
+                   VideoImages *    video,
+                   FramePool *      videoPool,
+                   GridController * grid_controller);
 
 
 // Global variables
@@ -50,6 +53,11 @@ main
         save_images = 1;
     }
 
+    //----------------------------------------------------------------
+    // Create a debug logger
+    DebugLogger * debug_logger = new DebugLogger();
+    //debug_logger->start();
+
 	//-----------------------------------------------------------------
 	// Open the FPGA for capture
 	int fpgaIdCapture = 0; // for now assume FPGA0 is capture FPGA
@@ -62,9 +70,24 @@ main
     }
 
     //-----------------------------------------------------------------
-	// Create the FramePools
-	FramePool *videoPool = new FramePool(10);
-	FramePool *annotationPool = new FramePool(3);
+    // Create the FramePools
+
+    // Make video pool size large enough to store the last 30 seconds
+    // worth of video (for debugging purposes)
+    int pool_size = 10;
+
+	FramePool *videoPool = new FramePool(pool_size);
+	FramePool *annotationPool = new FramePool(pool_size);
+
+
+    //-----------------------------------------------------------------
+	// Create Frame saver for saving video or for dumping the last n frames
+	// upon program termination
+	FrameSaver * frame_saver = new FrameSaver(0,
+	                                          true);
+    frame_saver->SetBGPool(videoPool);
+    frame_saver->SetFGPool(annotationPool);
+    frame_saver->start();
 
 	//-----------------------------------------------------------------
 	// Create the VideoImages source
@@ -105,13 +128,19 @@ main
         return -1;
     }
 
-    //----------------------------------------------------------------
-    // Create directory for images if we want to save them
-    if (save_images) {
-        if (-1 == mkdir(images_folder, S_IRWXU | S_IRWXG|  S_IRWXO)) {
-            perror("Error");
-        }
-    }
+    //-----------------------------------------------------------------
+    // Create controller object
+    GridController * grid_controller = new GridController(36,
+                                                          36,
+                                                          80,
+                                                          80,
+                                                          12,
+                                                          video->_width,
+                                                          video->_height,
+                                                          50,
+                                                          videoPool);
+
+    //debug_logger->log("Creating new grid controller");
 
     //-----------------------------------------------------------------
 	// Start the various threads
@@ -122,10 +151,12 @@ main
 	// Enter runtime logic
 	runtime_logic(annotator,
 	              video,
-	              videoPool);
+	              videoPool,
+	              grid_controller);
 
 	//-----------------------------------------------------------------
 	// Cleanup Code
+	frame_saver->stop();
 	videoPool->destroy();
 	annotationPool->destroy();
 
@@ -137,6 +168,9 @@ main
 	// Close the FPGA
 	fpga_close(fpgaCapture);
 
+	// Stop logs
+    //debug_logger->stop();
+
 	return 0;
 }
 
@@ -147,15 +181,17 @@ main
 void
 runtime_logic
 (
-    FrameAnnotator *annotator,
-    VideoImages *video,
-    FramePool *videoPool
+    FrameAnnotator * annotator,
+    VideoImages *    video,
+    FramePool *      videoPool,
+    GridController * grid_controller
 )
 {
+
     // For the time being, just get an image from the videoPool and initialize
     // on a specific location there. In time, we should replace this logic with
     // a proper target registration routine.
-    //usleep(3*1000*1000);
+    usleep(3*1000*1000);
 
     //-----------------------------------------------------------------
     // Get a Frame
@@ -178,21 +214,18 @@ runtime_logic
                            roi);
 
     //-----------------------------------------------------------------
-    // Create controller and annotator
-    GridController * grid_controller = new GridController(36,
-                                                          36,
-                                                          80,
-                                                          80,
-                                                          12,
-                                                          video->_width,
-                                                          video->_height);
+    // Release the frame
+    videoPool->release(frame);
+
+    //-----------------------------------------------------------------
+    // Create annotator
     GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller);
     annotator->add(grid_annotator);
 
     //-----------------------------------------------------------------
-    // Release the frame
-    videoPool->release(frame);
+    // Start various threads
     annotator->start();     // DELAY STARTING THESE THINGS UNTIL NOW TO
+    grid_controller->start();
 
     // Just wait for the end
     while (end == 0)

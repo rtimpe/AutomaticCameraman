@@ -13,6 +13,13 @@ FramePool::FramePool(int size) {
 	_numFrames = 0;
 	_end = 0;
 
+	if (_size > MAX_NUM_FRAMES)
+	{
+	    printf("Error: Max number of frames for the Frame Pool is %d\n",
+	           MAX_NUM_FRAMES);
+	    exit(-1);
+	}
+
 	// Create the condition variables and mutex
 	pthread_mutex_init(&_mutex, NULL);
 	pthread_cond_init (&_cv_curr, NULL);
@@ -68,6 +75,7 @@ Frame *FramePool::update_next(Frame *frame, int frameNum, bool wait) {
 			_frames[i]->_bgr->nSize == sizeof(IplImage) &&
 			(frame == NULL || _frames[i]->_id != frame->_id)) {
 			rtnFrame = _frames[i];
+			rtnFrame->_frame_num = frameNum;
 			break;
 		}
 	}

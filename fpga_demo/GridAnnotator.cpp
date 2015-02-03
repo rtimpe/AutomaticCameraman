@@ -25,7 +25,14 @@ GridAnnotator::draw_long_term
          end != it; ++it)
     {
         GridSquare & square = *it;
-        draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 0, 0, 255, 255);
+        if (square._marked)
+        {
+            draw_rect(img, square._x0, square._y0, square._w, square._h, 6, 255, 0, 0, 255);
+        }
+        else
+        {
+            draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 0, 0, 255, 255);
+        }
     }
     return true;
 }

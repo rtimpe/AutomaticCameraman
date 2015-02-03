@@ -314,5 +314,9 @@ protected:
 	char totaltimeStr[100];
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Creates string representation of date+time
+std::string get_current_datetime_string();
+
 
 #endif

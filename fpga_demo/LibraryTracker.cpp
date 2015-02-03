@@ -119,7 +119,7 @@ bool LibraryTracker::trackers_updated(vector<Cluster *> *preds, map<int, float> 
 				(int)((_tr[t]->_x + _tr[t]->_w/2.0)*_tr[t]->_scale), 
 				(int)((_tr[t]->_y + _tr[t]->_h/2.0)*_tr[t]->_scale), 
 				confid, 
-				_tr[t]->_predScore[NUM_PRED-1]/pow(2, 24), 
+				_tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24),
 				_tr[t]->_avg);
 
 			_tr[t]->_x = _tr[t]->_nccX[NUM_PRED-1];
@@ -135,7 +135,7 @@ bool LibraryTracker::trackers_updated(vector<Cluster *> *preds, map<int, float> 
 					cvScalar((50*_id+0) % 256, (20*_id+100) % 256, (176*_id+150) % 256, 255), 2, 8, 0);
 
 				// Provide the prediction
-				_clusters[t]._confidence = _tr[t]->_predScore[NUM_PRED-1]/pow(2, 24);
+				_clusters[t]._confidence = _tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24);
 				_clusters[t]._num = 1;
 				_clusters[t]._stable = false;
 				_clusters[t]._dim = _tr[t]->_w*_tr[t]->_scale;
@@ -155,7 +155,7 @@ bool LibraryTracker::trackers_updated(vector<Cluster *> *preds, map<int, float> 
 				(int)((_tr[t]->_x + _tr[t]->_w/2.0)*_tr[t]->_scale), 
 				(int)((_tr[t]->_y + _tr[t]->_h/2.0)*_tr[t]->_scale), 
 				confid, 
-				_tr[t]->_predScore[NUM_PRED-1]/pow(2, 24), 
+				_tr[t]->_predScore[NUM_PRED-1]/pow(2.0, 24),
 				_tr[t]->_avg);
 
 			_tr[t]->_train = 0;

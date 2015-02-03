@@ -14,6 +14,7 @@ public:
 
 	int _id;											// Unique id to identify IplImage 
 	IplImage *_bgr;										// IplImage color
+	int _frame_num;
 };
 
 

@@ -88,3 +88,22 @@ string								int2str( int i, int ndigits )
   temp << setfill('0') << setw(ndigits) << i;
   return temp.str();
 }
+
+string
+get_current_datetime_string
+(
+    void
+)
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+
+    time (&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer,80,"%d-%m-%Y %I:%M:%S",timeinfo);
+    std::string str(buffer);
+
+    return str;
+}
