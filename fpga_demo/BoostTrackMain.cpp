@@ -263,9 +263,6 @@ runtime_logic
         new GameAnnotator(1, game_controller, grid_annotator);
 
     annotator->add(game_annotator);
-
-    //-----------------------------------------------------------------
-    // Start various threads
     annotator->start();     // DELAY STARTING THESE THINGS UNTIL NOW TO
     //grid_controller->start();
     //ballController->start();

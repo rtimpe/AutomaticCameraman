@@ -29,6 +29,8 @@ GridAnnotator::draw_long_term
         GridSquare & square = *it;
         if (square.occupied) {
         	draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 255, 0, 0, 255);
+        } else {
+        	draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 0, 255, 0, 255);
         }
         //else {
         // 	draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 0, 255, 0, 255);

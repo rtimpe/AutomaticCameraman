@@ -3,6 +3,7 @@
 
 using std::string;
 
+
 TS_INIT(annotator, 2);
 TC_INIT(annotator, 1);
 
