@@ -23,25 +23,6 @@ GridSquare::GridSquare
 {}
 
 
-void
-GridSquare::reset
-(
-    void
-)
-{
-    runningMeanR = 0.0;
-    runningMeanSquaredR = 0.0;
-    runningMeanG = 0.0;
-    runningMeanSquaredG =0.0;
-    runningMeanB =0.0;
-    runningMeanSquaredB = 0.0;
-    meanShortR = 0.0;
-    meanShortG = 0.0;
-    meanShortB = 0.0;
-    occupied = false;
-}
-
-
 
 GridController::GridController
 (
@@ -55,7 +36,7 @@ GridController::GridController
 	FramePool *videoPool
 )
 : _upper_x(upper_x), _upper_y(upper_y), _x_step(x_step), _y_step(y_step),
-  _dim(dim), _img_w(img_w), _img_h(img_h), videoPool(videoPool)
+  _dim(dim), _img_w(img_w), _img_h(img_h), videoPool(videoPool), _end(false)
 {
     // Create grid of squares
     int x = _upper_x;
@@ -80,7 +61,7 @@ void* trackerFunc(void *arg) {
 	GridController *gridController = (GridController *)arg;
 	Frame *frame = NULL;
 	int frameNum = 0;
-	while (true) {
+	while (gridController->_end) {
 		gridController->videoPool->acquire(&frame, frameNum, false, true);
 
 		cv::Mat img(frame->_bgr);

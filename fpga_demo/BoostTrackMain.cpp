@@ -150,10 +150,7 @@ main
                                                           8,
                                                           video->_width,
                                                           video->_height,
-                                                          videoPool,
-                                                          shortAlpha,
-                                                          longAlpha,
-                                                          diff);
+                                                          videoPool);
 
     BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
 
@@ -248,6 +245,11 @@ runtime_logic
                            (Ipp8u*)gray->imageData,
                            gray->width*1,
                            roi);
+
+    //-----------------------------------------------------------------
+    // Create controller
+    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller);
+    annotator->add(grid_annotator);
 
     //-----------------------------------------------------------------
     // Release the frame
