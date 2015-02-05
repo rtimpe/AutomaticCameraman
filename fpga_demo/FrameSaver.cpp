@@ -232,6 +232,7 @@ SaveVideo
            << get_current_datetime_string() << ".mpeg";
         video_writer.open(ss.str(),
                           CV_FOURCC('P','I','M','1'),
+                          //CV_FOURCC('M','P','G','4'),
                           60.0,
                           cv::Size(bg_clone->width, bg_clone->height),
                           true);
@@ -240,6 +241,7 @@ SaveVideo
     // initialize cvImages if necessary
     if (!fg_clone_3)
     {
+        printf("[Creating fg_clone_3]\n");
         fg_clone_3 = cvCreateImage(cvSize(fg_clone->width,
                                           fg_clone->height),
                                    IPL_DEPTH_8U, 3);
@@ -247,6 +249,7 @@ SaveVideo
 
     if (!combined_frame)
     {
+        printf("[Creating combined_frame]\n");
         combined_frame = cvCreateImage(cvSize(bg_clone->width,
                                               bg_clone->height),
                                        IPL_DEPTH_8U, 3);
@@ -257,6 +260,7 @@ SaveVideo
     IppiSize roi;
     roi.width = fg_clone_3->width;
     roi.height = fg_clone_3->height;
+
 
     ippiCopy_8u_AC4C3R(
         reinterpret_cast<Ipp8u*>(fg_clone->imageData),
@@ -406,9 +410,21 @@ frame_saver_function
             SaveVideo(fs, video_writer, bg_clone, fg_clone);
         }
 
-        // Sleep 5 milliseconds
-        usleep(5000);
+        // Sleep 2 milliseconds
+        usleep(2000);
+
+        //-------------------------------------------------------------
+        // If _nframes_to_save is 0 and we're saving video, we need to
+        // release the clone frames here. (When _nframes_to_save is not 0,
+        // the circular buffer takes care of freeing resources).
+        if (fs->_save_video && 0 == fs->_nframes_to_save)
+        {
+            cvReleaseImage(&bg_clone);
+            cvReleaseImage(&fg_clone);
+        }
     }
+
+
 
 
     //***********************************************************************
