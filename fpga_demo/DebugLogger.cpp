@@ -20,7 +20,17 @@ DebugLogger::DebugLogger
     void
 )
 : _end(false), _log_buffer(0)
-{}
+{
+    pthread_mutex_init(&_logger_mutex, NULL);
+}
+
+DebugLogger::~DebugLogger
+(
+    void
+)
+{
+    pthread_mutex_destroy(&_logger_mutex);
+}
 
 void
 DebugLogger::log
@@ -94,8 +104,8 @@ logger_function
             for (vector<string>::iterator it = dl->_log_buffer.begin();
                  it != end; ++it)
             {
-                log_file << *it;
-                cout << *it;
+                log_file << *it << endl;
+                cout << *it << endl;
             }
             dl->_log_buffer.clear();
         }

@@ -126,7 +126,8 @@ void FramePool::release(Frame *frame) {
 	pthread_mutex_lock(&_mutex);
 
 	// Decrement the reference count
-	_refCounts[frame->_id]--;
+        if (frame && frame->_id <  MAX_NUM_FRAMES)
+            _refCounts[frame->_id]--;
 
 	// Release our mutex
 	pthread_mutex_unlock(&_mutex);
@@ -140,7 +141,7 @@ int FramePool::release_acquire(Frame **frame, int lastFrameNum, bool markAcquire
 	pthread_mutex_lock(&_mutex);
 
 	// Decrement the reference count
-	if (*frame != NULL)
+	if  (*frame != NULL)
 		_refCounts[(*frame)->_id]--;
 
 	// Check if the latest is newer (different) than what we have

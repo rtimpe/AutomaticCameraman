@@ -96,6 +96,7 @@ GridController::stop
 )
 {
     _end = true;
+    pthread_join(_thread, NULL);
 }
 
 
@@ -219,7 +220,8 @@ controller_function
             }
         } // if (process_frame)
 
-        usleep(30*1000);
+        // Sleep 2 milliseconds
+        usleep(2000);
 
     } // while(!gc->_end)
 }

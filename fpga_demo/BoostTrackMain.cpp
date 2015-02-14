@@ -23,7 +23,7 @@ void runtime_logic(FrameAnnotator * annotator,
 
 // Global variables
 int end = 0;
-static char * DISPLAYER_TITLE = "Capture Video";
+static char DISPLAYER_TITLE[] = "Capture Video";
 char prefix[] = "../../milboosttracker-master/sylv/imgs/";
 char stem[] = "%simg%05d.png";
 int startFrame = 1;
@@ -34,8 +34,10 @@ int startDim = 50; // with TRAIN_THRESH 7
 int frameW = 320;
 int frameH = 240;
 int save_images = 0;
-char * images_folder = "images";
+char images_folder[] = "images";
 
+
+DebugLogger * debug_logger = 0;
 
 //*****************************************************************************
 // * main
@@ -47,7 +49,7 @@ main
    const char** argv
 )
 {
-	randinitalize(0);
+    randinitalize(0);
 
     if (argc > 1 && !strcmp("-s", argv[1])) {
         save_images = 1;
@@ -55,13 +57,13 @@ main
 
     //----------------------------------------------------------------
     // Create a debug logger
-    DebugLogger * debug_logger = new DebugLogger();
-    //debug_logger->start();
+    debug_logger = new DebugLogger();
+    debug_logger->start();
 
-	//-----------------------------------------------------------------
-	// Open the FPGA for capture
-	int fpgaIdCapture = 0; // for now assume FPGA0 is capture FPGA
-	fpga_t *fpgaCapture;
+    //-----------------------------------------------------------------
+    // Open the FPGA for capture
+    int fpgaIdCapture = 0; // for now assume FPGA0 is capture FPGA
+    fpga_t *fpgaCapture;
     fpgaCapture = fpga_open(fpgaIdCapture);
 
     if (fpgaCapture == NULL) {
@@ -76,53 +78,54 @@ main
     // worth of video (for debugging purposes)
     int pool_size = 10;
 
-	FramePool *videoPool = new FramePool(pool_size);
-	FramePool *annotationPool = new FramePool(pool_size);
+    FramePool *videoPool = new FramePool(pool_size);
+    FramePool *annotationPool = new FramePool(pool_size);
 
 
     //-----------------------------------------------------------------
-	// Create Frame saver for saving video or for dumping the last n frames
-	// upon program termination
-	FrameSaver * frame_saver = new FrameSaver(0,
-	                                          true);
+    // Create Frame saver for saving video or for dumping the last n frames
+    // upon program termination
+    FrameSaver * frame_saver = new FrameSaver(0,      // num of frames to save
+                                              false); // save video?
     frame_saver->SetBGPool(videoPool);
     frame_saver->SetFGPool(annotationPool);
     frame_saver->start();
 
-	//-----------------------------------------------------------------
-	// Create the VideoImages source
-	//VideoImages *video = new DiskImages(prefix, stem, startFrame, endFrame, frameW, frameH, 30, videoPool);
-	VideoImages *video = new LiveImages(fpgaCapture,
-			                            0,
-			                            7000,
-			                            1280,
-			                            720,
-			                            60,
-			                            videoPool);
+    //-----------------------------------------------------------------
+    // Create the VideoImages source
+    //VideoImages *video = new DiskImages(prefix, stem, startFrame, endFrame, 
+    //                                    frameW, frameH, 30, videoPool);
+    VideoImages *video = new LiveImages(fpgaCapture,
+                                        0,
+                                        7000,
+                                        1280,
+                                        720,
+                                        60,
+                                        videoPool);
     if (!video->init()) {
         printf("ERROR: Could not initialize the VideoImages.\n");
         return -1;
     }
 
     //-----------------------------------------------------------------
-	// Create the FrameAnnotator
-	FrameAnnotator *annotator = new FrameAnnotator(video->_width,
-	                                               video->_height,
-		                                           NULL,
-		                                           annotationPool);
+    // Create the FrameAnnotator
+    FrameAnnotator *annotator = new FrameAnnotator(video->_width,
+                                                   video->_height,
+                                                   NULL,
+                                                   annotationPool);
     if (!annotator->init()) {
         printf("ERROR: Could not initialize the FrameAnnotator.\n");
         return -1;
     }
 
     //-----------------------------------------------------------------
-	// Create the FrameDisplayer
-	FrameDisplayer *displayer = new FrameDisplayer(DISPLAYER_TITLE,
-	                                               video->_width,
-	                                               video->_height,
-		                                           videoPool,
-		                                           annotationPool,
-		                                           handle_stop);
+    // Create the FrameDisplayer
+    FrameDisplayer *displayer = new FrameDisplayer(DISPLAYER_TITLE,
+                                                   video->_width,
+                                                   video->_height,
+                                                   videoPool,
+                                                   annotationPool,
+                                                   handle_stop);
     if (!displayer->init()) {
         printf("ERROR: Could not initialize the FrameDisplayer.\n");
         return -1;
@@ -140,38 +143,39 @@ main
                                                           50,
                                                           videoPool);
 
-    //debug_logger->log("Creating new grid controller");
+    debug_logger->log("Creating new grid controller");
 
     //-----------------------------------------------------------------
-	// Start the various threads
-	video->start();
-	displayer->start();
+    // Start the various threads
+    video->start();
+    displayer->start();
 
-	//-----------------------------------------------------------------
-	// Enter runtime logic
-	runtime_logic(annotator,
-	              video,
-	              videoPool,
-	              grid_controller);
+    //-----------------------------------------------------------------
+    // Enter runtime logic
+    runtime_logic(annotator,
+                  video,
+                  videoPool,
+                  grid_controller);
 
-	//-----------------------------------------------------------------
-	// Cleanup Code
-	frame_saver->stop();
-	videoPool->destroy();
-	annotationPool->destroy();
+    //-----------------------------------------------------------------
+    // Cleanup Code
+    frame_saver->stop();
+    videoPool->destroy();
+    annotationPool->destroy();
 
-	// Stop the various threads (annotator last)
-	displayer->stop();
-	video->stop();
-	annotator->stop();
+    // Stop the various threads (annotator last)
+    displayer->stop();
+    video->stop();
+    annotator->stop();
 
-	// Close the FPGA
-	fpga_close(fpgaCapture);
+    // Close the FPGA
+    fpga_close(fpgaCapture);
 
-	// Stop logs
-    //debug_logger->stop();
+    // Stop logs
+    debug_logger->stop();
 
-	return 0;
+        printf("Done.\n");
+    return 0;
 }
 
 
@@ -187,7 +191,7 @@ runtime_logic
     GridController * grid_controller
 )
 {
-
+    int k = 0;
     // For the time being, just get an image from the videoPool and initialize
     // on a specific location there. In time, we should replace this logic with
     // a proper target registration routine.
@@ -239,7 +243,7 @@ runtime_logic
 void
 handle_stop()
 {
-	end = 1;
+    end = 1;
 }
 
 

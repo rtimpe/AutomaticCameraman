@@ -25,6 +25,7 @@ GLvoid key_press(unsigned char key, int x, int y) {
 
 
 GLvoid display(void) {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 
@@ -81,6 +82,8 @@ GLvoid reshape(GLint w, GLint h) {
 
 
 GLvoid idle() {
+
+
 	Frame *frame;
 	int frameNum;
 
@@ -113,6 +116,7 @@ GLvoid idle() {
 
 
 void *displayer_fxn(void *arg) {
+
 	IplImage * img;
 	int argc = 1;
 	char *argv[1];

@@ -1,5 +1,6 @@
 #include "FrameSaver.h"
 #include "FramePool.h"
+#include "DebugLogger.h"
 #include <pthread.h>
 #include <sys/stat.h>
 #include <sstream>
@@ -15,6 +16,12 @@ static char VIDEO_FOLDER_NAME[] = "videos";
 
 
 static void * frame_saver_function(void * args);
+
+
+extern DebugLogger * debug_logger;
+
+TS_INIT(framesaver, 2);
+TC_INIT(framesaver, 1);
 
 
 FrameSaver::FrameSaver
@@ -233,7 +240,7 @@ SaveVideo
         video_writer.open(ss.str(),
                           CV_FOURCC('P','I','M','1'),
                           //CV_FOURCC('M','P','G','4'),
-                          60.0,
+                          45.0,
                           cv::Size(bg_clone->width, bg_clone->height),
                           true);
     }
@@ -356,6 +363,9 @@ frame_saver_function
     FrameSaver * fs = reinterpret_cast<FrameSaver *>(args);
     cv::VideoWriter video_writer;
 
+    int nframes_captured = 0;
+
+
     if (!fs->_save_video && 0 == fs->_nframes_to_save)
     {
         // This thread doesn't need to do anything. just return
@@ -371,10 +381,10 @@ frame_saver_function
 
     //----------------------------------------------------------------
     // Create sub directory for images for this run
-    stringstream ss;
-    ss << IMAGES_PARENT_FOLDER_NAME << "/"
+    stringstream ss1;
+    ss1 << IMAGES_PARENT_FOLDER_NAME << "/"
        << IMAGES_FOLDER_PREFIX << "_" << get_current_datetime_string();
-    string img_foldername(ss.str());
+    string img_foldername(ss1.str());
 
     if (fs->_nframes_to_save > 0)
     {
@@ -391,6 +401,8 @@ frame_saver_function
         perror("Error creating images directory");
     }
 
+    TS_STAMP(framesaver, 0);
+
     //-----------------------------------------------------------------
     // Loop until the program ends
     while (!fs->_end)
@@ -405,9 +417,13 @@ frame_saver_function
         BufferFGImage(fs, fg_clone);
 
         // Save video if necessary
-        if (fs->_save_video && bg_clone && fg_clone)
+        if (bg_clone && fg_clone)
         {
-            SaveVideo(fs, video_writer, bg_clone, fg_clone);
+            ++nframes_captured;
+            if (fs->_save_video)
+            {
+                SaveVideo(fs, video_writer, bg_clone, fg_clone);
+            }
         }
 
         // Sleep 2 milliseconds
@@ -424,6 +440,21 @@ frame_saver_function
         }
     }
 
+    TS_STAMP(framesaver, 1);
+    TC_ACCRUE(framesaver, 0, 1, 0);
+
+    //-----------------------------------------------------------------
+    // Compute fps of this thread
+    double total_seconds = 0.001 * TC_SUM(framesaver, 0);
+    double fps = nframes_captured / total_seconds;
+
+    cout << "total seconds: " << total_seconds << endl;
+    cout << "num frames saved: " << nframes_captured << endl;
+    cout << "fps : " <<  fps << endl;
+
+    stringstream ss;
+    ss << "frame saver : saved video at " << fps << " fps" << endl;
+    debug_logger->log(ss.str());
 
 
 

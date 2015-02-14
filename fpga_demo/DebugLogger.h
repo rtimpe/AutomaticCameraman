@@ -16,6 +16,7 @@ class DebugLogger
 {
 public:
     DebugLogger(void);
+    ~DebugLogger(void);
 
     void stop(void);
     void start(void);
