@@ -37,7 +37,7 @@ class GridController
 
 public:
 	GridController(int upper_x, int upper_y, int x_step, int y_step, int dim,
-	               int img_w, int img_h, FramePool *videoPool);
+	               int img_w, int img_h, FramePool *videoPool, double shortAlpha, double longAlpha, double diff);
 	~GridController();
 	void start();
 	void stop();
@@ -48,6 +48,9 @@ public:
 	int _img_w;    // width of image in pixels
 	int _img_h;    // height of image in pixels
 	bool _end;
+	double shortAlpha;
+	double longAlpha;
+	double diff;
 
 protected:
 	int _upper_x;  // x offset of upper left square

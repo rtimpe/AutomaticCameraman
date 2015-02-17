@@ -33,10 +33,14 @@ GridController::GridController
     int dim,
     int img_w,
     int img_h,
-	FramePool *videoPool
+	FramePool *videoPool,
+	double shortAlpha,
+	double longAlpha,
+	double diff
 )
 : _upper_x(upper_x), _upper_y(upper_y), _x_step(x_step), _y_step(y_step),
-  _dim(dim), _img_w(img_w), _img_h(img_h), videoPool(videoPool), _end(false)
+  _dim(dim), _img_w(img_w), _img_h(img_h), videoPool(videoPool), shortAlpha(shortAlpha),
+  longAlpha(longAlpha), diff(diff), _end(false)
 {
     // Create grid of squares
     int x = _upper_x;
@@ -61,7 +65,7 @@ void* trackerFunc(void *arg) {
 	GridController *gridController = (GridController *)arg;
 	Frame *frame = NULL;
 	int frameNum = 0;
-	while (gridController->_end) {
+	while (!gridController->_end) {
 		gridController->videoPool->acquire(&frame, frameNum, false, true);
 
 		cv::Mat img(frame->_bgr);
@@ -100,7 +104,7 @@ void* trackerFunc(void *arg) {
 				gs.runningMeanSquaredR = averageR * averageR;
 				gs.runningMeanSquaredG = averageG * averageG;
 			} else {
-				double alpha = .1;
+				double alpha = gridController->longAlpha;
 				gs.runningMeanR = (1.0 - alpha) * gs.runningMeanR + alpha * averageR;
 				gs.runningMeanSquaredR = (1.0 - alpha) * gs.runningMeanSquaredR + alpha * averageR * averageR;
 				gs.runningMeanG = (1.0 - alpha) * gs.runningMeanG + alpha * averageG;
@@ -108,7 +112,7 @@ void* trackerFunc(void *arg) {
 				gs.runningMeanB = (1.0 - alpha) * gs.runningMeanB + alpha * averageB;
 				gs.runningMeanSquaredB = (1.0 - alpha) * gs.runningMeanSquaredB + alpha * averageB * averageB;
 
-				double smallAlpha = .9;
+				double smallAlpha = gridController->shortAlpha;
 				gs.meanShortB = (1.0 - smallAlpha) * gs.meanShortB + smallAlpha * averageB;
 				gs.meanShortG = (1.0 - smallAlpha) * gs.meanShortG + smallAlpha * averageG;
 				gs.meanShortR = (1.0 - smallAlpha) * gs.meanShortR + smallAlpha * averageR;
@@ -121,7 +125,8 @@ void* trackerFunc(void *arg) {
 				double diffG = std::abs(gs.meanShortG - gs.runningMeanG);
 				double diffB = std::abs(gs.meanShortB - gs.runningMeanB);
 				//cout << "long: " << gs.runningMeanR << " short: " << gs.meanShortR << " average: " << averageR << " std: " << stdR << endl;
-				if (diffR > 20 || diffG > 20 || diffB > 20) {
+				double diff = gridController->diff;
+				if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
 					gs.occupied = true;
 				} else {
 					gs.occupied = false;

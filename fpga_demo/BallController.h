@@ -9,8 +9,7 @@
 #define BALLCONTROLLER_H_
 
 #include "Public.h"
-
-class GridController;
+#include "GridController.h"
 
 class BallController
 {
@@ -23,17 +22,13 @@ public:
 	void start();
 	void stop();
 
-	double vX;
-	double vY;
-	double xPos;
-	double yPos;
+	int xPos;
+	int yPos;
 	int radius;
 	bool hit;
-	int hitTimer;
 	GridController *gc;
 	int imgWidth;
 	int imgHeight;
-	bool _end;
 };
 
 

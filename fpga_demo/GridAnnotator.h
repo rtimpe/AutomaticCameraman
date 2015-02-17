@@ -2,6 +2,7 @@
 #define GRID_ANNOTATOR_PUBLIC
 
 #include "Annotator.h"
+#include "BallController.h"
 
 class GridController;
 class BallController;

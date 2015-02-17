@@ -6,8 +6,6 @@
 #include "GridAnnotator.h"
 #include "GridController.h"
 #include "BallController.h"
-#include "GameController.h"
-#include "GameAnnotator.h"
 #include "DebugLogger.h"
 #include "FrameSaver.h"
 #include <riffa.h>
@@ -24,8 +22,7 @@ void runtime_logic(FrameAnnotator * annotator,
                    VideoImages *    video,
                    FramePool *      videoPool,
                    GridController * grid_controller,
-                   BallController * ballController,
-                   GameController * game_controller);
+				   BallController * ballController);
 
 
 // Global variables
@@ -63,6 +60,12 @@ main
     double longAlpha = atof(argv[2]);
     double diff = atof(argv[3]);
 
+    double shortAlpha = atof(argv[2]);
+    double longAlpha = atof(argv[3]);
+    double diff = atof(argv[4]);
+
+
+
     //----------------------------------------------------------------
     // Create a debug logger
     debug_logger = new DebugLogger();
@@ -91,11 +94,10 @@ main
 
 
     //-----------------------------------------------------------------
-    // Create Frame saver for saving video or for dumping the last n frames
-    // upon program termination
-    frame_saver = new FrameSaver(0,      // num of frames to save
-                                 false); // save video?
-
+	// Create Frame saver for saving video or for dumping the last n frames
+	// upon program termination
+	FrameSaver * frame_saver = new FrameSaver(0,
+	                                          false);
     frame_saver->SetBGPool(videoPool);
     frame_saver->SetFGPool(annotationPool);
     frame_saver->start();
@@ -142,7 +144,7 @@ main
     }
 
     //-----------------------------------------------------------------
-    // Create grid controller object
+    // Create controller object
     GridController * grid_controller = new GridController(10,
                                                           10,
                                                           10,
@@ -150,7 +152,12 @@ main
                                                           8,
                                                           video->_width,
                                                           video->_height,
-                                                          videoPool);
+                                                          videoPool,
+														  shortAlpha,
+														  longAlpha,
+														  diff);
+
+    BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
 
     BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
 
@@ -167,19 +174,13 @@ main
                            ballController,
                            grid_controller);
 
-    //-----------------------------------------------------------------
-    // Start the various threads
-    video->start();
-    displayer->start();
-
-    //-----------------------------------------------------------------
-    // Enter runtime logic
-    runtime_logic(annotator,
-                  video,
-                  videoPool,
-                  grid_controller,
-                  ballController,
-                  game_controller);
+	//-----------------------------------------------------------------
+	// Enter runtime logic
+	runtime_logic(annotator,
+	              video,
+	              videoPool,
+	              grid_controller,
+				  ballController);
 
     //-----------------------------------------------------------------
     // Cleanup Code
@@ -217,8 +218,7 @@ runtime_logic
     VideoImages *    video,
     FramePool *      videoPool,
     GridController * grid_controller,
-    BallController * ballController,
-    GameController * game_controller
+	BallController * ballController
 )
 {
     // For the time being, just get an image from the videoPool and initialize
@@ -248,27 +248,15 @@ runtime_logic
 
     //-----------------------------------------------------------------
     // Create controller
-    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller);
+    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller, ballController);
     annotator->add(grid_annotator);
 
     //-----------------------------------------------------------------
     // Release the frame
     videoPool->release(frame);
-
-    //-----------------------------------------------------------------
-    // Create annotators
-    GridAnnotator * grid_annotator = new GridAnnotator(0,
-                                                       grid_controller,
-                                                       ballController);
-
-    GameAnnotator * game_annotator =
-        new GameAnnotator(1, game_controller, grid_annotator);
-
-    annotator->add(game_annotator);
     annotator->start();     // DELAY STARTING THESE THINGS UNTIL NOW TO
-    //grid_controller->start();
-    //ballController->start();
-    game_controller->start();
+    grid_controller->start();
+    ballController->start();
 
     // Just wait for the end
     while (end == 0)
