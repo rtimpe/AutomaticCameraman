@@ -78,6 +78,8 @@ FrameSaver::start
 )
 {
     _end = false;
+    pthread_mutex_init(&_frame_saver_mutex, NULL);
+    pthread_cond_init(&_frame_saver_cond, NULL);
     pthread_create(&_frame_saver_thread, NULL, frame_saver_function, this);
 }
 
@@ -88,7 +90,13 @@ FrameSaver::stop
     void
 )
 {
+    pthread_mutex_lock(&_frame_saver_mutex);
+
     _end = true;
+
+    pthread_cond_signal(&_frame_saver_cond);
+    pthread_mutex_unlock(&_frame_saver_mutex);
+
     pthread_join(_frame_saver_thread, NULL);
 }
 
@@ -110,6 +118,20 @@ FrameSaver::UpdateFGIndex
 )
 {
     _fg_index = (_fg_index + 1) % _nframes_to_save;
+}
+
+void
+FrameSaver::ToggleRecord
+(
+    void
+)
+{
+    pthread_mutex_lock(&_frame_saver_mutex);
+
+    _save_video = !_save_video;
+
+    pthread_cond_signal(&_frame_saver_cond);
+    pthread_mutex_unlock(&_frame_saver_mutex);
 }
 
 static void
@@ -355,57 +377,23 @@ SaveFGToDisk
 
 
 static void *
-frame_saver_function
+frame_saver_main_loop
 (
-    void * args
+    FrameSaver * fs
 )
 {
-    FrameSaver * fs = reinterpret_cast<FrameSaver *>(args);
-    cv::VideoWriter video_writer;
-
-    int nframes_captured = 0;
-
-
-    if (!fs->_save_video && 0 == fs->_nframes_to_save)
-    {
-        // This thread doesn't need to do anything. just return
-        return NULL;
-    }
-
-    //----------------------------------------------------------------
-    // Create parent directories for images
-    if (-1 == mkdir(IMAGES_PARENT_FOLDER_NAME,
-                    S_IRWXU | S_IRWXG|  S_IRWXO)) {
-        perror("Error creating images directory");
-    }
-
-    //----------------------------------------------------------------
-    // Create sub directory for images for this run
-    stringstream ss1;
-    ss1 << IMAGES_PARENT_FOLDER_NAME << "/"
-       << IMAGES_FOLDER_PREFIX << "_" << get_current_datetime_string();
-    string img_foldername(ss1.str());
-
-    if (fs->_nframes_to_save > 0)
-    {
-        if (-1 == mkdir(img_foldername.c_str(),
-                        S_IRWXU | S_IRWXG|  S_IRWXO)) {
-            perror("Error creating images directory");
-        }
-    }
-
-    //-----------------------------------------------------------------
-    // Create directory for the movie if we want to save one
-    if (-1 == mkdir(VIDEO_FOLDER_NAME,
-                    S_IRWXU | S_IRWXG|  S_IRWXO)) {
-        perror("Error creating images directory");
-    }
+    cout << "Entered frame_saver_mail_loop" << endl;
 
     TS_STAMP(framesaver, 0);
 
+    int nframes_captured = 0;
+    cv::VideoWriter video_writer;
+
     //-----------------------------------------------------------------
-    // Loop until the program ends
-    while (!fs->_end)
+    // Loop until either the program ends, or there's nothing to do
+    // because recording was toggled off.
+    while (!fs->_end &&
+           (fs->_save_video || fs->_nframes_to_save > 0))
     {
         IplImage * bg_clone = 0;
         IplImage * fg_clone = 0;
@@ -456,17 +444,80 @@ frame_saver_function
     ss << "frame saver : saved video at " << fps << " fps" << endl;
     debug_logger->log(ss.str());
 
+    //-----------------------------------------------------------------
+    // Close the video file if one was created
+    if (video_writer.isOpened())
+    {
+        video_writer.release();
+    }
+
+    cout << "Exiting frame_saver_mail_loop" << endl;
+}
+
+
+static void *
+frame_saver_function
+(
+    void * args
+)
+{
+    FrameSaver * fs = reinterpret_cast<FrameSaver *>(args);
+
+    //----------------------------------------------------------------
+    // Create parent directories for images
+    if (-1 == mkdir(IMAGES_PARENT_FOLDER_NAME,
+                    S_IRWXU | S_IRWXG|  S_IRWXO)) {
+        perror("Error creating images directory");
+    }
+
+    //----------------------------------------------------------------
+    // Create sub directory for images for this run
+    stringstream ss1;
+    ss1 << IMAGES_PARENT_FOLDER_NAME << "/"
+       << IMAGES_FOLDER_PREFIX << "_" << get_current_datetime_string();
+    string img_foldername(ss1.str());
+
+    if (fs->_nframes_to_save > 0)
+    {
+        if (-1 == mkdir(img_foldername.c_str(),
+                        S_IRWXU | S_IRWXG|  S_IRWXO)) {
+            perror("Error creating images directory");
+        }
+    }
+
+    //-----------------------------------------------------------------
+    // Create directory for the movie if we want to save one
+    if (-1 == mkdir(VIDEO_FOLDER_NAME,
+                    S_IRWXU | S_IRWXG|  S_IRWXO)) {
+        perror("Error creating images directory");
+    }
+
+    //-----------------------------------------------------------------
+    // Loop until the program is terminated
+    while (!fs->_end)
+    {
+        // If there's something to do, enter the main loop
+        if (fs->_save_video || fs->_nframes_to_save > 0)
+        {
+            frame_saver_main_loop(fs);
+        }
+        else
+        {
+            // If there's nothing to do, let's sleep until there IS something
+            // to do
+            pthread_mutex_lock(&fs->_frame_saver_mutex);
+
+            if (!fs->_end && !fs->_save_video && fs->_nframes_to_save <= 0)
+                pthread_cond_wait(&fs->_frame_saver_cond, &fs->_frame_saver_mutex);
+
+            pthread_mutex_unlock(&fs->_frame_saver_mutex);
+        }
+    }
 
 
     //***********************************************************************
     //***** AT THIS POINT, THE USER HAS CHOSEN TO TERMINATE THE PROGRAM *****
     //***********************************************************************
-
-    // Close the video file if one was created
-    if (fs->_save_video && video_writer.isOpened())
-    {
-        video_writer.release();
-    }
 
     // Save last nframes of Background to disk
     if (fs->_bg_pool && fs->_nframes_to_save > 0)

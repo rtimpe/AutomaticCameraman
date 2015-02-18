@@ -28,6 +28,7 @@ public:
     void UpdateBGIndex(void);
     void UpdateFGIndex(void);
 
+    void ToggleRecord(void);
 
     int                  _nframes_to_save;
     bool                 _save_video;
@@ -44,6 +45,7 @@ public:
 
     pthread_t            _frame_saver_thread;
     pthread_mutex_t      _frame_saver_mutex;
+    pthread_cond_t       _frame_saver_cond;
 
     FramePool *          _bg_pool;
     FramePool *          _fg_pool;

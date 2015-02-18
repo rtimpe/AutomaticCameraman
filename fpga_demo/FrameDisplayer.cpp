@@ -19,6 +19,11 @@ GLvoid key_press(unsigned char key, int x, int y) {
 			if (fd->_userExit != NULL)
 				fd->_userExit();
 			break;
+
+		case 'v':
+		    if (fd->_toggleRecord != NULL)
+		        fd->_toggleRecord();
+		    break;
 	}
 	glutPostRedisplay();
 }
@@ -166,13 +171,14 @@ void *displayer_fxn(void *arg) {
 
 
 FrameDisplayer::FrameDisplayer(char title[], int w, int h, FramePool *bgPool, 
-	FramePool *fgPool, void (*userExit)(void)) :
+	FramePool *fgPool, void (*userExit)(void), void (*toggleRecord)(void)) :
 			_window(0), textureId0(0), textureId1(0), _lastBgFrameNum(0), _lastFgFrameNum(0) {
 	// Save
 	_bgPool = bgPool;
 	_fgPool = fgPool;
 	_title = title;
 	_userExit = userExit;
+	_toggleRecord = toggleRecord;
 	_width = w;
 	_height = h;
 	fd = this;

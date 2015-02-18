@@ -11,7 +11,7 @@ class FrameDisplayer
 {
 public:
 	FrameDisplayer(char title[], int w, int h, FramePool *bgPool, 
-		FramePool *fgPool, void (*userExit)(void));
+		FramePool *fgPool, void (*userExit)(void), void (*toggleRecord)(void));
 	~FrameDisplayer(){};
 	bool init();
 	void start();
@@ -20,6 +20,7 @@ public:
 	FramePool *_bgPool;									// FramePool for background images
 	FramePool *_fgPool;									// FramePool for foreground images
 	void (*_userExit)(void);							// Function pointer, called when user quits
+	void (*_toggleRecord)(void);                        // Function pointer for starting/stopping video recording
 	char *_title;										// GLUT window title
 	GLint _window;										// GLUT window
 	GLuint textureId0;									// GLUT texture id

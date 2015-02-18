@@ -15,6 +15,7 @@
 
 // Forward declarations for functions
 void handle_stop(void);
+void toggle_record(void);
 void runtime_logic(FrameAnnotator * annotator,
                    VideoImages *    video,
                    FramePool *      videoPool,
@@ -37,7 +38,8 @@ int save_images = 0;
 char images_folder[] = "images";
 
 
-DebugLogger * debug_logger = 0;
+DebugLogger *       debug_logger = 0;
+static FrameSaver * frame_saver = 0;
 
 //*****************************************************************************
 // * main
@@ -85,8 +87,9 @@ main
     //-----------------------------------------------------------------
     // Create Frame saver for saving video or for dumping the last n frames
     // upon program termination
-    FrameSaver * frame_saver = new FrameSaver(0,      // num of frames to save
-                                              false); // save video?
+    frame_saver = new FrameSaver(0,      // num of frames to save
+                                 false); // save video?
+
     frame_saver->SetBGPool(videoPool);
     frame_saver->SetFGPool(annotationPool);
     frame_saver->start();
@@ -125,7 +128,8 @@ main
                                                    video->_height,
                                                    videoPool,
                                                    annotationPool,
-                                                   handle_stop);
+                                                   handle_stop,
+                                                   toggle_record);
     if (!displayer->init()) {
         printf("ERROR: Could not initialize the FrameDisplayer.\n");
         return -1;
@@ -238,12 +242,25 @@ runtime_logic
 
 
 //*****************************************************************************
-// * handle_stop
+//* handle_stop
 //*****************************************************************************
 void
 handle_stop()
 {
     end = 1;
+}
+
+//*****************************************************************************
+//* toggle_record
+//*****************************************************************************
+void
+toggle_record()
+{
+    printf("Toggle Record called\n");
+    if (frame_saver)
+    {
+        frame_saver->ToggleRecord();
+    }
 }
 
 
