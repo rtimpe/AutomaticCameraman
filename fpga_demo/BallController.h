@@ -22,6 +22,8 @@ public:
 	void start();
 	void stop();
 
+	double vX;
+	double vY;
 	int xPos;
 	int yPos;
 	int radius;
