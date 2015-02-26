@@ -10,7 +10,7 @@
 
 BallController::BallController(GridController *gc, int imgWidth, int imgHeight, int radius) :
 gc(gc), imgWidth(imgWidth), imgHeight(imgHeight), xPos(imgWidth / 2), yPos(imgHeight / 2),
-radius(radius), hit(false), vX(1.0), vY(0)
+radius(radius), hit(false), vX(1.0), vY(-.5)
 { }
 
 void* ballFunc(void *arg) {
@@ -26,8 +26,8 @@ void* ballFunc(void *arg) {
 			if (!sq.occupied) {
 				continue;
 			}
-			double dist = std::sqrt(((double)ballController->xPos - (double)sq._x0) * ((double)ballController->xPos - (double)sq._x0)
-					+ ((double)ballController->yPos - (double)sq._y0) * ((double)ballController->yPos - (double)sq._y0));
+			double dist = std::sqrt((ballController->xPos - (double)sq._x0) * (ballController->xPos - (double)sq._x0)
+					+ (ballController->yPos - (double)sq._y0) * (ballController->yPos - (double)sq._y0));
 			if (dist < ballController->radius) {
 				ballController->hit = true;
 				sX += sq._x0;
@@ -61,7 +61,7 @@ void* ballFunc(void *arg) {
 			ballController->xPos = 0;
 			ballController->vX *= -1.0;
 		}
-		if (ballController->xPos >= ballController->imgWidth) {
+		if (ballController->xPos > ballController->imgWidth) {
 			ballController->xPos = ballController->imgWidth;
 			ballController->vX *= -1.0;
 		}
@@ -69,11 +69,13 @@ void* ballFunc(void *arg) {
 			ballController->yPos = 0;
 			ballController->vY *= -1.0;
 		}
-		if (ballController->yPos >= ballController->imgHeight) {
+		if (ballController->yPos > ballController->imgHeight) {
 			ballController->yPos = ballController->imgHeight;
 			ballController->vY *= -1.0;
 		}
 
+//		std::cout << "xpos: " << ballController->xPos << " ypos: " << ballController->yPos << std::endl;
+//		std::cout << "x: " << ballController->vX << " y: " << ballController->vY << std::endl;
 		usleep(10000);
 	}
 }

@@ -24,8 +24,8 @@ public:
 
 	double vX;
 	double vY;
-	int xPos;
-	int yPos;
+	double xPos;
+	double yPos;
 	int radius;
 	bool hit;
 	GridController *gc;
