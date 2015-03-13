@@ -40,7 +40,7 @@ GridController::GridController
 )
 : _upper_x(upper_x), _upper_y(upper_y), _x_step(x_step), _y_step(y_step),
   _dim(dim), _img_w(img_w), _img_h(img_h), videoPool(videoPool), shortAlpha(shortAlpha),
-  longAlpha(longAlpha), diff(diff), _end(false)
+  longAlpha(longAlpha), diff(diff), _end(false), timer(200)
 {
     // Create grid of squares
     int x = _upper_x;
@@ -64,7 +64,7 @@ void* trackerFunc(void *arg) {
 
 	GridController *gridController = (GridController *)arg;
 	Frame *frame = NULL;
-	int frameNum = 0;
+	long frameNum = 0;
 	while (!gridController->_end) {
 		gridController->videoPool->acquire(&frame, frameNum, false, true);
 
@@ -72,6 +72,7 @@ void* trackerFunc(void *arg) {
 		//cv::Mat img;
 		//cv::cvtColor(imgColor, img, CV_RGB2GRAY);
 
+		bool occupiedChange = false;
 		// compute new average value for each square
 		for (int i = 0; i < gridController->_squares.size(); i++) {
 			GridSquare &gs = gridController->_squares[i];
@@ -104,13 +105,15 @@ void* trackerFunc(void *arg) {
 				gs.runningMeanSquaredR = averageR * averageR;
 				gs.runningMeanSquaredG = averageG * averageG;
 			} else {
-				double alpha = gridController->longAlpha;
-				gs.runningMeanR = (1.0 - alpha) * gs.runningMeanR + alpha * averageR;
-				gs.runningMeanSquaredR = (1.0 - alpha) * gs.runningMeanSquaredR + alpha * averageR * averageR;
-				gs.runningMeanG = (1.0 - alpha) * gs.runningMeanG + alpha * averageG;
-				gs.runningMeanSquaredG = (1.0 - alpha) * gs.runningMeanSquaredG + alpha * averageG * averageG;
-				gs.runningMeanB = (1.0 - alpha) * gs.runningMeanB + alpha * averageB;
-				gs.runningMeanSquaredB = (1.0 - alpha) * gs.runningMeanSquaredB + alpha * averageB * averageB;
+				if (!gs.occupied) {
+					double alpha = gridController->longAlpha;
+					gs.runningMeanR = (1.0 - alpha) * gs.runningMeanR + alpha * averageR;
+					gs.runningMeanSquaredR = (1.0 - alpha) * gs.runningMeanSquaredR + alpha * averageR * averageR;
+					gs.runningMeanG = (1.0 - alpha) * gs.runningMeanG + alpha * averageG;
+					gs.runningMeanSquaredG = (1.0 - alpha) * gs.runningMeanSquaredG + alpha * averageG * averageG;
+					gs.runningMeanB = (1.0 - alpha) * gs.runningMeanB + alpha * averageB;
+					gs.runningMeanSquaredB = (1.0 - alpha) * gs.runningMeanSquaredB + alpha * averageB * averageB;
+				}
 
 				double smallAlpha = gridController->shortAlpha;
 				gs.meanShortB = (1.0 - smallAlpha) * gs.meanShortB + smallAlpha * averageB;
@@ -126,10 +129,64 @@ void* trackerFunc(void *arg) {
 				double diffB = std::abs(gs.meanShortB - gs.runningMeanB);
 				//cout << "long: " << gs.runningMeanR << " short: " << gs.meanShortR << " average: " << averageR << " std: " << stdR << endl;
 				double diff = gridController->diff;
-				if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
-					gs.occupied = true;
-				} else {
+				if (frameNum > 500) {
+					if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
+						if (gs.occupied == false) {
+							occupiedChange = true;
+						}
+						gs.occupied = true;
+					} else {
+						gs.occupied = false;
+					}
+				}
+//				if (gs._x0 < 1000 && gs._x0 > 900) {
+//					gs.occupied = true;
+//				}
+//				if (gs._x0 < 200 && gs._x0 > 100) {
+//					gs.occupied = true;
+//				}
+			}
+		}
+
+		if (occupiedChange) {
+			gridController->timer = 200;
+		} else if (frameNum > 500) {
+			gridController->timer--;
+			if (gridController->timer < 0) {
+				gridController->timer = 200;
+				cout << "reseting\n";
+				for (int i = 0; i < gridController->_squares.size(); i++) {
+					GridSquare &gs = gridController->_squares[i];
+					double averageR = 0.0;
+					double averageG = 0.0;
+					double averageB = 0.0;
+					for (int j = gs._x0; j < gs._x0 + gs._w; j++) {
+						for (int k = gs._y0; k < gs._y0 + gs._h; k++) {
+							//cout << "start j: " << j << " k: " << k << endl;
+							cv::Vec3b pixel = img.at<cv::Vec3b>(k, j);
+							//cout << "end\n";
+							averageB += pixel[0];
+							averageG += pixel[1];
+							averageR += pixel[2];
+						}
+					}
+					averageR /= (double) (gs._w * gs._h);
+					averageG /= (double) (gs._w * gs._h);
+					averageB /= (double) (gs._w * gs._h);
+
+
+					gs.runningMeanB = averageB;
+					gs.runningMeanR = averageR;
+					gs.runningMeanG = averageG;
+					gs.meanShortB = averageB;
+					gs.meanShortR = averageR;
+					gs.meanShortG = averageG;
+					gs.runningMeanSquaredB = averageB * averageB;
+					gs.runningMeanSquaredR = averageR * averageR;
+					gs.runningMeanSquaredG = averageG * averageG;
+
 					gs.occupied = false;
+					frameNum = 0;
 				}
 			}
 		}

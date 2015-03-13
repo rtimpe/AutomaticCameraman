@@ -28,6 +28,7 @@ public:
 	double yPos;
 	int radius;
 	bool hit;
+	int hitTimer;
 	GridController *gc;
 	int imgWidth;
 	int imgHeight;

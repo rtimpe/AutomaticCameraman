@@ -51,6 +51,7 @@ public:
 	double shortAlpha;
 	double longAlpha;
 	double diff;
+	long timer;
 
 protected:
 	int _upper_x;  // x offset of upper left square

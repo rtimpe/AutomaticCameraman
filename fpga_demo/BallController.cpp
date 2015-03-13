@@ -26,32 +26,52 @@ void* ballFunc(void *arg) {
 			if (!sq.occupied) {
 				continue;
 			}
-			double dist = std::sqrt((ballController->xPos - (double)sq._x0) * (ballController->xPos - (double)sq._x0)
-					+ (ballController->yPos - (double)sq._y0) * (ballController->yPos - (double)sq._y0));
+			double x = sq._x0 + (double) sq._w / 2.0;
+			double y = sq._y0 + (double) sq._h / 2.0;
+			double dist = std::sqrt((ballController->xPos - x) * (ballController->xPos - x)
+					+ (ballController->yPos - y) * (ballController->yPos - y));
 			if (dist < ballController->radius) {
 				ballController->hit = true;
-				sX += sq._x0;
-				sY += sq._y0;
+				sX += x;
+				sY += y;
 				numHits++;
 			}
 		}
 
-		if (ballController->hit == true) {
+		if (ballController->hitTimer > 0) {
+			ballController->hitTimer--;
+		}
+
+		if (ballController->hit == true && ballController->hitTimer <= 0) {
+			ballController->hitTimer = 50;
 			sX /= (double) numHits;
 			sY /= (double) numHits;
-			double vXN = 0;
-			double vYN = 0;
-			double len = std::sqrt(ballController->vX * ballController->vX + ballController->vY * ballController->vY);
-			vXN = ballController->vX / len;
-			vYN = ballController->vY / len;
-
+			sX = ballController->xPos - sX;
+			sY = ballController->yPos - sY;
 			double sLen = std::sqrt(sX * sX + sY * sY);
 			sX = sX / sLen;
 			sY = sY / sLen;
+			double newVX = sX - ballController->vX;
+			double newVY = sY - ballController->vY;
+			cout << "x: " << newVX << endl;
+			cout << "Y: " << newVY << endl;
+			double len = std::sqrt(newVX * newVX + newVY * newVY);
+			ballController->vX = 2.0 * (newVX / len);
+			ballController->vY = 2.0 * (newVY / len);
 
-			double theta = -1.0 * (vXN * sX + vYN * sY);
-			ballController->vX += theta * 2.0;
-			ballController->vY += theta * 2.0;
+//			double vXN = 0;
+//			double vYN = 0;
+//			double len = std::sqrt(ballController->vX * ballController->vX + ballController->vY * ballController->vY);
+//			vXN = ballController->vX / len;
+//			vYN = ballController->vY / len;
+//
+//			double sLen = std::sqrt(sX * sX + sY * sY);
+//			sX = sX / sLen;
+//			sY = sY / sLen;
+//
+//			double theta = -1.0 * (vXN * sX + vYN * sY);
+//			ballController->vX += theta * 2.0;
+//			ballController->vY += theta * 2.0;
 		}
 
 		ballController->xPos += ballController->vX;
