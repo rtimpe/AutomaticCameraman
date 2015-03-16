@@ -107,3 +107,15 @@ get_current_datetime_string
 
     return str;
 }
+
+
+double
+get_current_time_ms
+(
+    void
+)
+{
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);
+    return current_time.tv_sec*1000.0 + current_time.tv_usec/1000.0;
+}

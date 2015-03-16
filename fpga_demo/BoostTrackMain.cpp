@@ -5,12 +5,16 @@
 #include "FrameDisplayer.h"
 #include "GridAnnotator.h"
 #include "GridController.h"
+#include "BallController.h"
+#include "GameController.h"
+#include "GameAnnotator.h"
 #include "DebugLogger.h"
 #include "FrameSaver.h"
 #include <riffa.h>
 #include <execinfo.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <cstdlib>
 
 
 // Forward declarations for functions
@@ -19,7 +23,9 @@ void toggle_record(void);
 void runtime_logic(FrameAnnotator * annotator,
                    VideoImages *    video,
                    FramePool *      videoPool,
-                   GridController * grid_controller);
+                   GridController * grid_controller,
+                   BallController * ballController,
+                   GameController * game_controller);
 
 
 // Global variables
@@ -53,9 +59,9 @@ main
 {
     randinitalize(0);
 
-    if (argc > 1 && !strcmp("-s", argv[1])) {
-        save_images = 1;
-    }
+    double shortAlpha = atof(argv[1]);
+    double longAlpha = atof(argv[2]);
+    double diff = atof(argv[3]);
 
     //----------------------------------------------------------------
     // Create a debug logger
@@ -136,18 +142,33 @@ main
     }
 
     //-----------------------------------------------------------------
-    // Create controller object
-    GridController * grid_controller = new GridController(36,
-                                                          36,
-                                                          80,
-                                                          80,
-                                                          12,
+    // Create grid controller object
+    GridController * grid_controller = new GridController(10,
+                                                          10,
+                                                          10,
+                                                          10,
+                                                          8,
                                                           video->_width,
                                                           video->_height,
-                                                          50,
-                                                          videoPool);
+                                                          videoPool,
+                                                          shortAlpha,
+                                                          longAlpha,
+                                                          diff);
+
+    BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
 
     debug_logger->log("Creating new grid controller");
+
+    //-----------------------------------------------------------------
+    // Create game controller
+    GameController * game_controller =
+        new GameController(toggle_record,
+                           video->_width,
+                           video->_height,
+                           60,
+                           videoPool,
+                           ballController,
+                           grid_controller);
 
     //-----------------------------------------------------------------
     // Start the various threads
@@ -159,7 +180,9 @@ main
     runtime_logic(annotator,
                   video,
                   videoPool,
-                  grid_controller);
+                  grid_controller,
+                  ballController,
+                  game_controller);
 
     //-----------------------------------------------------------------
     // Cleanup Code
@@ -170,7 +193,11 @@ main
     // Stop the various threads (annotator last)
     displayer->stop();
     video->stop();
+
     annotator->stop();
+    game_controller->stop();
+    //ballController->stop();
+    //grid_controller->stop();
 
     // Close the FPGA
     fpga_close(fpgaCapture);
@@ -192,10 +219,11 @@ runtime_logic
     FrameAnnotator * annotator,
     VideoImages *    video,
     FramePool *      videoPool,
-    GridController * grid_controller
+    GridController * grid_controller,
+    BallController * ballController,
+    GameController * game_controller
 )
 {
-    int k = 0;
     // For the time being, just get an image from the videoPool and initialize
     // on a specific location there. In time, we should replace this logic with
     // a proper target registration routine.
@@ -226,14 +254,22 @@ runtime_logic
     videoPool->release(frame);
 
     //-----------------------------------------------------------------
-    // Create annotator
-    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller);
-    annotator->add(grid_annotator);
+    // Create annotators
+    GridAnnotator * grid_annotator = new GridAnnotator(0,
+                                                       grid_controller,
+                                                       ballController);
+
+    GameAnnotator * game_annotator =
+        new GameAnnotator(1, game_controller, grid_annotator);
+
+    annotator->add(game_annotator);
 
     //-----------------------------------------------------------------
     // Start various threads
     annotator->start();     // DELAY STARTING THESE THINGS UNTIL NOW TO
-    grid_controller->start();
+    //grid_controller->start();
+    //ballController->start();
+    game_controller->start();
 
     // Just wait for the end
     while (end == 0)

@@ -316,7 +316,8 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Creates string representation of date+time
-std::string get_current_datetime_string();
+std::string get_current_datetime_string(void);
+double get_current_time_ms(void);
 
 
 #endif

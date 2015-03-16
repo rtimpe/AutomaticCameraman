@@ -1,0 +1,497 @@
+#include "GameController.h"
+#include "FramePool.h"
+#include "BallController.h"
+#include "GridController.h"
+
+using std::cout;
+using std::endl;
+
+
+static void * controller_function(void * args);
+
+static bool out_file_created = false;
+static bool first_line = false;
+static ofstream out_file;
+
+
+//*****************************************************************************
+// EngagementController methods
+//*****************************************************************************
+GameController::GameController
+(
+    void                (*toggleRecord)(void),
+    int                   img_w,
+    int                   img_h,
+    int                   recording_duration,
+	FramePool *           video_pool,
+    BallController *      ball_controller,
+	GridController *      grid_controller
+)
+: _toggleRecord(toggleRecord),
+  _recording_started(false),
+  _img_w(img_w), _img_h(img_h), _recording_duration(recording_duration),
+  _instruction_duration(5), _countdown_duration(3),
+  _current_state(PROMPT_STATE), _current_state_done(false), _end(false),
+  _video_pool(video_pool), _frame_num(0), _engaged_target_id(0),
+  _current_score(0),
+  _hoop_center_x(img_w/2), _hoop_center_y(60), _hoop_radius(80),
+  _ball_controller(ball_controller), _grid_controller(grid_controller)
+{
+    _state_start_time = get_current_time_ms();
+
+    // Create targets
+    //_targets.push_back(GridSquare(400, 400, 72, 72));
+    _engagement_targets.push_back(GridSquare(100, 100, 50, 50));
+    _engagement_targets.push_back(GridSquare(1000, 100, 50, 50));
+    _engagement_targets.push_back(GridSquare(100, 650, 50, 50));
+}
+
+
+void
+GameController::start
+(
+    void
+)
+{
+	pthread_create(&_thread, NULL, controller_function, this);
+}
+
+
+void
+GameController::stop
+(
+    void
+)
+{
+    _end = true;
+    pthread_join(_thread, NULL);
+}
+
+
+void
+GameController::updateState
+(
+    void
+)
+{
+    if (_current_state_done)
+    {
+        switch (_current_state)
+        {
+        case PROMPT_STATE:
+            _current_state = INSTRUCTION_STATE;
+            break;
+        case INSTRUCTION_STATE:
+            _current_state = COUNTDOWN_STATE;
+            break;
+        case COUNTDOWN_STATE:
+            _current_state = RECORD_STATE;
+
+            _grid_controller->start();
+            _ball_controller->start();
+            _current_score = 0;
+            break;
+        case RECORD_STATE:
+            _current_state = FEEDBACK_STATE;
+
+            _ball_controller->stop();
+            _grid_controller->stop();
+            break;
+        case FEEDBACK_STATE:
+            _current_state = RESET_STATE;
+            break;
+        case RESET_STATE:
+            _current_state = PROMPT_STATE;
+
+            _engaged_target_id = 0;
+            _grid_controller->reset();
+        }
+
+        _current_state_done = false;
+        _state_start_time   = get_current_time_ms();
+    }
+}
+
+
+double
+GameController::timeElapedInCurrentStateMS
+(
+    void
+)
+const
+{
+    double current_time = get_current_time_ms();
+    return current_time - _state_start_time;
+}
+
+
+GameController::~GameController
+(
+    void
+)
+{
+}
+
+
+#if 0
+void
+GameController::doPromptState
+(
+    void
+)
+{
+    Frame * frame = NULL;
+
+    _video_pool->acquire(&frame, _frame_num, false, true);
+
+    cv::Mat img(frame->_bgr);
+
+    SquareIter end = _engagement_targets.end();
+    for (SquareIter it = _engagement_targets.begin();
+         end != it; ++it)
+    {
+        GridSquare & gs = *it;
+
+        //-------------------------------------------------------------
+        // Get greyscale image of window
+        cv::Mat sub_img = img(cv::Range(gs._x0, gs._x0 + gs._w),
+                              cv::Range(gs._y0, gs._y0 + gs._h));
+        cv::Mat grey_sub_img;
+        cv::cvtColor(sub_img,
+                     grey_sub_img,
+                     cv::COLOR_BGR2GRAY);
+
+        //cout << "source type is " << grey_sub_img.type() << endl;
+
+
+
+        //-------------------------------------------------------------
+        // Compute optical flow
+        vector<cv::Point2f> next_corners;
+        vector<unsigned char> status;
+        vector<float> errs;
+
+        if (!_prev_corners.empty())
+        {
+            cv::calcOpticalFlowPyrLK(_prev_sub_img,
+                                     grey_sub_img,
+                                     _prev_corners,
+                                     next_corners,
+                                     status,
+                                     errs);
+        }
+
+        //-------------------------------------------------------------
+        // Get vectors
+
+        cv::Point2f avg_vec(0.f, 0.f);
+        int count = 0;
+        _avg_flow_vec = avg_vec; // reset
+
+        for (unsigned int i = 0; i < status.size(); ++i)
+        {
+            if (status[i])
+            {
+                float error = MIN(errs[i], 100.0f);
+                float coef  = (100.f - error)*(100.f - error)*0.0001;
+
+                cv::Point2f & t0 = _prev_corners[i];
+                cv::Point2f & t1 = next_corners[i];
+                cv::Point2f delta = coef*(t1 - t0);
+
+                avg_vec = avg_vec + delta;
+
+                ++count;
+            }
+        }
+
+        float magnitude = 0.f;
+
+        if (count > 0)
+        {
+            avg_vec.x = avg_vec.x / count;
+            avg_vec.y = avg_vec.y / count;
+            magnitude = sqrtf(avg_vec.x*avg_vec.x + avg_vec.y*avg_vec.y);
+
+            _avg_flow_vec = avg_vec;
+            _avg_flow_vec_magnitude = magnitude;
+        }
+
+        if (magnitude > 1.8)
+        {
+            cout << "magnitude is " << magnitude << endl;
+            cout << "Avg vec is [" << avg_vec.x << "," << avg_vec.y << "]" <<endl;
+        }
+
+        out_file << avg_vec.x << "," << avg_vec.y << endl;
+
+        //-------------------------------------------------------------
+        // Get features for the current frame
+        vector<cv::Point2f> corners;
+        cv::goodFeaturesToTrack(grey_sub_img,   // input image
+                                corners,        // output
+                                16,             // max corners
+                                0.1,            // quality level
+                                1.0);
+        //cout << "Num features detected is " << corners.size() << endl;
+
+        // Update previous frame (for the next iteration)
+        grey_sub_img.copyTo(_prev_sub_img);
+        _prev_corners = corners;
+    }
+
+    ++_frame_num;
+
+    _video_pool->release(frame);
+}
+
+#else
+
+void
+GameController::doPromptState
+(
+    void
+)
+{
+    Frame * frame = NULL;
+
+    _video_pool->acquire(&frame, _frame_num, false, true);
+
+    cv::Mat img(frame->_bgr);
+
+    int id = 1;
+
+    SquareIter end = _engagement_targets.end();
+    for (SquareIter it = _engagement_targets.begin();
+         end != it; ++it)
+    {
+        GridSquare & gs = *it;
+
+        //-------------------------------------------------------------
+        // Compute the RGB averages for each of the target squares
+        double averageR = 0.0;
+        double averageG = 0.0;
+        double averageB = 0.0;
+
+        for (int j = gs._x0; j < gs._x0 + gs._w; ++j) {
+            for (int k = gs._y0; k < gs._y0 + gs._h; ++k) {
+                cv::Vec3b pixel = img.at<cv::Vec3b>(k, j);
+                averageB += pixel[0];
+                averageG += pixel[1];
+                averageR += pixel[2];
+            }
+        }
+        averageR /= (double) (gs._w * gs._h);
+        averageG /= (double) (gs._w * gs._h);
+        averageB /= (double) (gs._w * gs._h);
+
+
+        if (_frame_num == 0)
+        {
+            //
+            gs.runningMeanB = averageB;
+            gs.runningMeanR = averageR;
+            gs.runningMeanG = averageG;
+            gs.meanShortB = averageB;
+            gs.meanShortR = averageR;
+            gs.meanShortG = averageG;
+            gs.runningMeanSquaredB = averageB * averageB;
+            gs.runningMeanSquaredR = averageR * averageR;
+            gs.runningMeanSquaredG = averageG * averageG;
+        }
+        else
+        {
+
+        }
+
+        //--------------------------------------------------------------
+        // diff average with running mean
+        double diffR = std::abs(gs.runningMeanR - averageR);
+        double diffG = std::abs(gs.runningMeanG - averageG);
+        double diffB = std::abs(gs.runningMeanB - averageB);
+
+        //-------------------------------------------------------------
+        // check if engaged
+        if (0 == _engaged_target_id )
+        {
+            gs.occupied = false;
+        }
+
+        if (_frame_num > 100)
+        {
+            if (diffR > 24.0 || diffG > 24.0 || diffB > 24.0)
+            {
+                gs.occupied = true;
+                if (id == _engaged_target_id ||
+                    id == _engaged_target_id + 1)
+                {
+                    gs.occupied = true;
+                    _engaged_target_id = id;
+                }
+                else
+                {
+                    _engaged_target_id = 0;
+                }
+            }
+        }
+        ++id;
+
+        //-------------------------------------------------------------
+        // update the mean
+        double alpha = 0.01;
+        double beta = 1.0 - alpha;
+        gs.runningMeanR = alpha * averageR + beta  * gs.runningMeanR;
+        gs.runningMeanG = alpha * averageG + beta  * gs.runningMeanG;
+        gs.runningMeanB = alpha * averageB + beta  * gs.runningMeanB;
+    }
+
+    ++_frame_num;
+
+    _video_pool->release(frame);
+
+    //cout << "target id is now " << _engaged_target_id << endl;
+    if (3 == _engaged_target_id)
+    {
+        cout << "State is done!" << endl;
+        _current_state_done = true;
+    }
+}
+#endif
+
+
+void
+GameController::doInstructionState
+(
+    void
+)
+{
+    double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
+    _current_state_done = time_elapsed > (double)_instruction_duration+ 1.0;
+}
+
+
+void
+GameController::doCountdownState
+(
+    void
+)
+{
+    double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
+    _current_state_done = time_elapsed > (double)_countdown_duration + 1.0;
+}
+
+
+void
+GameController::doRecordState
+(
+    void
+)
+{
+    // Start recording if it hasn't been started yet
+    if (!_recording_started)
+    {
+        _toggleRecord();
+        _recording_started = true;
+    }
+
+    // Update Score if the ball is inside the hoop
+    float xdiff = static_cast<float>(_hoop_center_x - _ball_controller->xPos);
+    float ydiff = static_cast<float>(_hoop_center_y - _ball_controller->yPos);
+    float distance = sqrtf(xdiff*xdiff + ydiff*ydiff);
+    if (distance <= static_cast<float>(_hoop_radius))
+        ++_current_score;
+
+    double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
+    _current_state_done = time_elapsed > _recording_duration;
+
+    // Stop Recording if duration is up
+    if (_current_state_done && _recording_started)
+    {
+        _toggleRecord();
+        _recording_started = false;
+    }
+}
+
+
+void
+GameController::doFeedbackState
+(
+    void
+)
+{
+    double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
+    _current_state_done = time_elapsed > 6.0;
+}
+
+
+void
+GameController::doResetState
+(
+    void
+)
+{
+    double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
+    _current_state_done = time_elapsed > 6.0;
+}
+
+
+//*****************************************************************************
+// local (Non-class) functions
+//*****************************************************************************
+
+static void *
+controller_function
+(
+    void *arg
+)
+{
+    GameController * ec = (GameController *)arg;
+
+    stringstream ss;
+    ss << "opticalflow_" << get_current_datetime_string();
+
+    out_file.open(ss.str().c_str());
+    out_file_created = true;
+
+
+    while (!ec->_end)
+    {
+        switch (ec->_current_state)
+        {
+        case GameController::PROMPT_STATE:
+            ec->doPromptState();
+            break;
+        case GameController::INSTRUCTION_STATE:
+            ec->doInstructionState();
+            break;
+        case GameController::COUNTDOWN_STATE:
+            ec->doCountdownState();
+            break;
+        case GameController::RECORD_STATE:
+            ec->doRecordState();
+            break;
+        case GameController::FEEDBACK_STATE:
+            ec->doFeedbackState();
+            break;
+        case GameController::RESET_STATE:
+            ec->doResetState();
+            break;
+        }
+
+        ec->updateState();
+
+        usleep(10*1000);
+    }
+
+    out_file.close();
+
+    return NULL;
+}
+
+
+
+
+
+
+
+

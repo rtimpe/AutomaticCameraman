@@ -1,5 +1,7 @@
 #include "FrameAnnotator.h"
-#include "timer.h"
+#include <string.h>
+
+using std::string;
 
 TS_INIT(annotator, 2);
 TC_INIT(annotator, 1);
@@ -16,7 +18,6 @@ void Annotator::draw_rect(IplImage *img, int x, int y, int w, int h,
 	cvRectangle(img, p1, p2, cvScalar(B, G, R, alpha), lineWidth);
 }
 
-
 void Annotator::draw_line(IplImage *img, int x0, int y0, int x1, int y1, 
 	int lineWidth, int R, int G, int B, int alpha) {
 	CvPoint p1, p2;
@@ -24,6 +25,21 @@ void Annotator::draw_line(IplImage *img, int x0, int y0, int x1, int y1,
 	p2 = cvPoint(x1, y1);
 	// Setting alpha to 255 means fully visible (no transparency)
 	cvLine(img, p1, p2, cvScalar(B, G, R, alpha), lineWidth);
+}
+
+void Annotator::draw_circle(IplImage *img, int x, int y, int radius, int width, int R, int G, int B, int alpha) {
+	CvPoint p;
+	p = cvPoint(x, y);
+	cvCircle(img, p, radius, cvScalar(B, G, R, alpha), width);
+}
+
+void Annotator::draw_text(IplImage * img, int x, int y, const string & s, int fontFace, double scale, const cv::Scalar & color, int thickness, int lineType) {
+
+    CvPoint p;
+
+    p = cvPoint(x, y);
+    cv::Mat mat(img);
+    cv::putText(mat, s, p, fontFace, scale, color, thickness, lineType, false);
 }
 
 
