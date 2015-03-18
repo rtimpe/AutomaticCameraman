@@ -32,8 +32,9 @@ GameController::GameController
   _img_w(img_w), _img_h(img_h), _recording_duration(recording_duration),
   _instruction_duration(5), _countdown_duration(3),
   _current_state(PROMPT_STATE), _current_state_done(false), _end(false),
-  _video_pool(video_pool), _frame_num(0), _engaged_target_id(0),
-  _current_score(0),
+  _video_pool(video_pool),
+  _frame_num(0), _is_first_frame(true), _first_frame_num(0),
+  _engaged_target_id(0), _current_score(0),
   _hoop_center_x(img_w/2), _hoop_center_y(60), _hoop_radius(80),
   _ball_controller(ball_controller), _grid_controller(grid_controller)
 {
@@ -103,7 +104,9 @@ GameController::updateState
         case RESET_STATE:
             _current_state = PROMPT_STATE;
 
-            _engaged_target_id = 0;
+            _is_first_frame = true;
+            resetEngagementTargets();
+
             _grid_controller->reset();
         }
 
@@ -130,6 +133,23 @@ GameController::~GameController
     void
 )
 {
+}
+
+
+void
+GameController::resetEngagementTargets
+(
+    void
+)
+{
+    SquareIter end = _engagement_targets.end();
+    for (SquareIter it = _engagement_targets.begin();
+         end != it; ++it)
+    {
+        GridSquare & gs = *it;
+        gs.reset();
+    }
+    _engaged_target_id = 0;
 }
 
 
@@ -255,17 +275,28 @@ GameController::doPromptState
 {
     Frame * frame = NULL;
 
-    _video_pool->acquire(&frame, _frame_num, false, true);
+    int new_frame_num = _video_pool->acquire(&frame,
+                                             _frame_num,
+                                             false,
+                                             true);
+
+    if (NULL == frame || new_frame_num <= _frame_num)
+    {
+        return;
+    }
+
+    _frame_num = new_frame_num;
 
     cv::Mat img(frame->_bgr);
 
-    int id = 1;
+    int target_id = 0;
 
     SquareIter end = _engagement_targets.end();
     for (SquareIter it = _engagement_targets.begin();
          end != it; ++it)
     {
         GridSquare & gs = *it;
+        ++target_id;
 
         //-------------------------------------------------------------
         // Compute the RGB averages for each of the target squares
@@ -273,8 +304,10 @@ GameController::doPromptState
         double averageG = 0.0;
         double averageB = 0.0;
 
-        for (int j = gs._x0; j < gs._x0 + gs._w; ++j) {
-            for (int k = gs._y0; k < gs._y0 + gs._h; ++k) {
+        for (int j = gs._x0; j < gs._x0 + gs._w; ++j)
+        {
+            for (int k = gs._y0; k < gs._y0 + gs._h; ++k)
+            {
                 cv::Vec3b pixel = img.at<cv::Vec3b>(k, j);
                 averageB += pixel[0];
                 averageG += pixel[1];
@@ -285,10 +318,8 @@ GameController::doPromptState
         averageG /= (double) (gs._w * gs._h);
         averageB /= (double) (gs._w * gs._h);
 
-
-        if (_frame_num == 0)
+        if (_is_first_frame)
         {
-            //
             gs.runningMeanB = averageB;
             gs.runningMeanR = averageR;
             gs.runningMeanG = averageG;
@@ -298,54 +329,74 @@ GameController::doPromptState
             gs.runningMeanSquaredB = averageB * averageB;
             gs.runningMeanSquaredR = averageR * averageR;
             gs.runningMeanSquaredG = averageG * averageG;
+
+            _is_first_frame = false;
+            _first_frame_num = _frame_num;
         }
         else
         {
+            if (!gs.occupied) {
+                double alpha = _grid_controller->longAlpha;
+                gs.runningMeanR = (1.0 - alpha) * gs.runningMeanR + alpha * averageR;
+                gs.runningMeanSquaredR = (1.0 - alpha) * gs.runningMeanSquaredR + alpha * averageR * averageR;
+                gs.runningMeanG = (1.0 - alpha) * gs.runningMeanG + alpha * averageG;
+                gs.runningMeanSquaredG = (1.0 - alpha) * gs.runningMeanSquaredG + alpha * averageG * averageG;
+                gs.runningMeanB = (1.0 - alpha) * gs.runningMeanB + alpha * averageB;
+                gs.runningMeanSquaredB = (1.0 - alpha) * gs.runningMeanSquaredB + alpha * averageB * averageB;
+            }
 
-        }
+            cout << "meanShortB=" << gs.meanShortB << endl;
 
-        //--------------------------------------------------------------
-        // diff average with running mean
-        double diffR = std::abs(gs.runningMeanR - averageR);
-        double diffG = std::abs(gs.runningMeanG - averageG);
-        double diffB = std::abs(gs.runningMeanB - averageB);
+            double smallAlpha = _grid_controller->shortAlpha;
+            gs.meanShortB = (1.0 - smallAlpha) * gs.meanShortB + smallAlpha * averageB;
+            gs.meanShortG = (1.0 - smallAlpha) * gs.meanShortG + smallAlpha * averageG;
+            gs.meanShortR = (1.0 - smallAlpha) * gs.meanShortR + smallAlpha * averageR;
 
-        //-------------------------------------------------------------
-        // check if engaged
-        if (0 == _engaged_target_id )
-        {
-            gs.occupied = false;
-        }
+            double stdR = std::sqrt(gs.runningMeanSquaredR - gs.runningMeanR * gs.runningMeanR);
+            double stdG = std::sqrt(gs.runningMeanSquaredG - gs.runningMeanG * gs.runningMeanG);
+            double stdB = std::sqrt(gs.runningMeanSquaredB - gs.runningMeanB * gs.runningMeanB);
 
-        if (_frame_num > 100)
-        {
-            if (diffR > 24.0 || diffG > 24.0 || diffB > 24.0)
-            {
-                gs.occupied = true;
-                if (id == _engaged_target_id ||
-                    id == _engaged_target_id + 1)
-                {
+            double diffR = std::abs(gs.meanShortR - gs.runningMeanR);
+            double diffG = std::abs(gs.meanShortG - gs.runningMeanG);
+            double diffB = std::abs(gs.meanShortB - gs.runningMeanB);
+
+            double diff = _grid_controller->diff;
+
+            if (_frame_num > 200 + _first_frame_num) {
+                cout << "diffR=" << diffR << ", diff*stdR=" << diff*stdR << endl;
+                if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
                     gs.occupied = true;
-                    _engaged_target_id = id;
-                }
-                else
-                {
-                    _engaged_target_id = 0;
+
+                    if (target_id == _engaged_target_id ||
+                        target_id == _engaged_target_id + 1)
+                    {
+                        gs.occupied = true;
+                        _engaged_target_id = target_id;
+                    }
+                    else
+                    {
+                        _engaged_target_id = 0;
+                    }
+
+                } else {
+                    //gs.occupied = false;
                 }
             }
         }
-        ++id;
-
-        //-------------------------------------------------------------
-        // update the mean
-        double alpha = 0.01;
-        double beta = 1.0 - alpha;
-        gs.runningMeanR = alpha * averageR + beta  * gs.runningMeanR;
-        gs.runningMeanG = alpha * averageG + beta  * gs.runningMeanG;
-        gs.runningMeanB = alpha * averageB + beta  * gs.runningMeanB;
     }
 
-    ++_frame_num;
+
+    if (0 == _engaged_target_id)
+    {
+        SquareIter end = _engagement_targets.end();
+        for (SquareIter it = _engagement_targets.begin();
+             end != it; ++it)
+        {
+            GridSquare & gs = *it;
+            gs.occupied = false;
+        }
+    }
+
 
     _video_pool->release(frame);
 
@@ -447,11 +498,11 @@ controller_function
 {
     GameController * ec = (GameController *)arg;
 
-    stringstream ss;
-    ss << "opticalflow_" << get_current_datetime_string();
+    //stringstream ss;
+    //ss << "opticalflow_" << get_current_datetime_string();
 
-    out_file.open(ss.str().c_str());
-    out_file_created = true;
+    //out_file.open(ss.str().c_str());
+    //out_file_created = true;
 
 
     while (!ec->_end)
@@ -483,7 +534,7 @@ controller_function
         usleep(10*1000);
     }
 
-    out_file.close();
+    //out_file.close();
 
     return NULL;
 }

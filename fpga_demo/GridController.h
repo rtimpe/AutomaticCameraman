@@ -12,6 +12,7 @@ struct GridSquare
 {
 public:
     GridSquare(int x0, int y0, int w, int h);
+    void reset();
 
     int _x0;   // location of upper right corner
     int _y0;   // location of upper left corner

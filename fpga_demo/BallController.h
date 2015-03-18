@@ -33,6 +33,7 @@ public:
 	GridController *gc;
 	int imgWidth;
 	int imgHeight;
+	bool _end;
 };
 
 

@@ -11,13 +11,13 @@
 
 BallController::BallController(GridController *gc, int imgWidth, int imgHeight, int radius) :
 gc(gc), imgWidth(imgWidth), imgHeight(imgHeight), xPos(imgWidth / 2), yPos(imgHeight / 2),
-radius(radius), hit(false), vX(1.0), vY(-.5)
+radius(radius), hit(false), vX(1.0), vY(-.5), _end(false)
 { }
 
 void* ballFunc(void *arg) {
 	BallController *ballController = (BallController *)arg;
 
-	while (true) {
+	while (!ballController->_end) {
 		ballController->hit = false;
 		double sX = 0;
 		double sY = 0;
@@ -102,9 +102,11 @@ void* ballFunc(void *arg) {
 }
 
 void BallController::start() {
+    _end = false;
 	pthread_create(&thread, NULL, ballFunc, this);
 }
 
 void BallController::stop() {
-
+    _end = true;
+    pthread_join(thread, NULL);
 }

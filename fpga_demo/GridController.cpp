@@ -23,6 +23,25 @@ GridSquare::GridSquare
 {}
 
 
+void
+GridSquare::reset
+(
+    void
+)
+{
+    runningMeanR = 0.0;
+    runningMeanSquaredR = 0.0;
+    runningMeanG = 0.0;
+    runningMeanSquaredG =0.0;
+    runningMeanB =0.0;
+    runningMeanSquaredB = 0.0;
+    meanShortR = 0.0;
+    meanShortG = 0.0;
+    meanShortB = 0.0;
+    occupied = false;
+}
+
+
 
 GridController::GridController
 (
@@ -65,17 +84,7 @@ void GridController::reset(void)
     for (int i = 0; i < _squares.size(); i++) {
         GridSquare &gs = _squares[i];
 
-        gs.runningMeanR = 0.0;
-        gs.runningMeanSquaredR = 0.0;
-        gs.runningMeanG = 0.0;
-        gs.runningMeanSquaredG =0.0;
-        gs.runningMeanB =0.0;
-        gs.runningMeanSquaredB = 0.0;
-        gs.meanShortR = 0.0;
-        gs.meanShortG = 0.0;
-        gs.meanShortB = 0.0;
-        gs.occupied = false;
-
+        gs.reset();
     }
 }
 
@@ -85,8 +94,25 @@ void* trackerFunc(void *arg) {
 	GridController *gridController = (GridController *)arg;
 	Frame *frame = NULL;
 	long frameNum = 0;
+	bool isFirstFrame = true;
+	long firstFrameNum = 0;
+
 	while (!gridController->_end) {
-		gridController->videoPool->acquire(&frame, frameNum, false, true);
+		int newFrameNum = gridController->videoPool->acquire(&frame, frameNum, false, true);
+
+		if (!frame || newFrameNum <= frameNum)
+		{
+		    usleep(5000);
+		    continue;
+		}
+
+		frameNum = newFrameNum;
+
+		if (isFirstFrame)
+		{
+		    firstFrameNum = frameNum;
+		    isFirstFrame = false;
+		}
 
 		cv::Mat img(frame->_bgr);
 		//cv::Mat img;
@@ -114,7 +140,7 @@ void* trackerFunc(void *arg) {
 			averageB /= (double) (gs._w * gs._h);
 
 
-			if (frameNum == 0) {
+			if (frameNum == firstFrameNum) {
 				gs.runningMeanB = averageB;
 				gs.runningMeanR = averageR;
 				gs.runningMeanG = averageG;
@@ -149,7 +175,7 @@ void* trackerFunc(void *arg) {
 				double diffB = std::abs(gs.meanShortB - gs.runningMeanB);
 				//cout << "long: " << gs.runningMeanR << " short: " << gs.meanShortR << " average: " << averageR << " std: " << stdR << endl;
 				double diff = gridController->diff;
-				if (frameNum > 500) {
+				if (frameNum > 500 + firstFrameNum) {
 					if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
 						if (gs.occupied == false) {
 							occupiedChange = true;
@@ -170,7 +196,7 @@ void* trackerFunc(void *arg) {
 
 		if (occupiedChange) {
 			gridController->timer = 200;
-		} else if (frameNum > 500) {
+		} else if (frameNum > 500 + firstFrameNum) {
 			gridController->timer--;
 			if (gridController->timer < 0) {
 				gridController->timer = 200;
@@ -206,12 +232,10 @@ void* trackerFunc(void *arg) {
 					gs.runningMeanSquaredG = averageG * averageG;
 
 					gs.occupied = false;
-					frameNum = 0;
+					isFirstFrame = true;
 				}
 			}
 		}
-
-		frameNum++;
 
 		gridController->videoPool->release(frame);
 	}
@@ -225,8 +249,8 @@ GridController::start
     void
 )
 {
+    _end = false;
 	pthread_create(&_thread, NULL, trackerFunc, this);
-
 }
 
 
@@ -238,6 +262,7 @@ GridController::stop
 {
 	cout << "called stop\n\n\n\n\n\n";
     _end = true;
+	pthread_join(_thread, NULL);
 }
 
 GridController::~GridController

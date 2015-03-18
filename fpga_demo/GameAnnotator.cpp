@@ -99,7 +99,7 @@ GameAnnotator::draw_prompt_state
 
         // Draw the digit inside the square
         std::stringstream ss;
-        ss << i++;
+        ss << ++i;
 
         int    base_line  = 0;
         int    font_face  = CV_FONT_HERSHEY_PLAIN;
@@ -126,7 +126,7 @@ GameAnnotator::draw_prompt_state
     // Draw prompt message
     {
         std::stringstream ss;
-        ss << "Active each square in the order listed!";
+        ss << "Activate each square in the order listed!";
 
         int    base_line  = 0;
         int    font_face  = CV_FONT_HERSHEY_PLAIN;

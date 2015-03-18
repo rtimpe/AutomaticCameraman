@@ -83,7 +83,10 @@ Frame *FramePool::update_next(Frame *frame, int frameNum, bool wait) {
 	// Release the mutex
 	pthread_mutex_unlock(&_mutex);
 
-	assert(rtnFrame != NULL);
+	if (!_end)
+	{
+	    assert(rtnFrame != NULL);
+	}
 	return rtnFrame;
 }
 

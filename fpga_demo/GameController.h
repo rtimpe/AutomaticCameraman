@@ -43,6 +43,7 @@ public:
 	void stop(void);
 	void updateState(void);
 	double timeElapedInCurrentStateMS(void) const;
+	void resetEngagementTargets(void);
 
 	void doPromptState(void);
 	void doInstructionState(void);
@@ -64,6 +65,8 @@ public:
     bool             _end;                  // true if someone invokes stop() method
     FramePool *      _video_pool;           // the video pool for tracking
     int              _frame_num;
+    bool             _is_first_frame;
+    int              _first_frame_num;
     int              _engaged_target_id;
     int              _current_score;
     int              _hoop_center_x;
