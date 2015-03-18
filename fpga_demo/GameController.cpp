@@ -449,12 +449,24 @@ GameController::doRecordState
         _recording_started = true;
     }
 
-    // Update Score if the ball is inside the hoop
+    // Check if the ball is inside the hoop
     float xdiff = static_cast<float>(_hoop_center_x - _ball_controller->xPos);
     float ydiff = static_cast<float>(_hoop_center_y - _ball_controller->yPos);
     float distance = sqrtf(xdiff*xdiff + ydiff*ydiff);
     if (distance <= static_cast<float>(_hoop_radius))
-        ++_current_score;
+    {
+        // If we weren't in the hoop before, udpate the score!
+        if (!_is_in_hoop)
+        {
+            ++_current_score;
+            _is_in_hoop = true;
+        }
+    }
+    else if (_is_in_hoop)
+    {
+        // We moved from inside to outside the hoop!
+        _is_in_hoop = false;
+    }
 
     double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
     _current_state_done = time_elapsed > _recording_duration;

@@ -77,6 +77,7 @@ public:
     int              _hoop_center_x;
     int              _hoop_center_y;
     int              _hoop_radius;
+    bool             _is_in_hoop;
 
     BallController *      _ball_controller;      // We need to know location of ball
     GridController *      _grid_controller;
