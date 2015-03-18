@@ -165,7 +165,7 @@ main
         new GameController(toggle_record,
                            video->_width,
                            video->_height,
-                           30,
+                           60,
                            videoPool,
                            ballController,
                            grid_controller);

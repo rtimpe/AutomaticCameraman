@@ -34,7 +34,8 @@ GameController::GameController
   _current_state(PROMPT_STATE), _current_state_done(false), _end(false),
   _video_pool(video_pool),
   _frame_num(0), _is_first_frame(true), _first_frame_num(0),
-  _engaged_target_id(0), _current_score(0),
+  _engaged_target_id(0), _engagement_triggered_time(0.0),
+  _current_score(0),
   _hoop_center_x(img_w/2), _hoop_center_y(60), _hoop_radius(80),
   _ball_controller(ball_controller), _grid_controller(grid_controller)
 {
@@ -64,7 +65,6 @@ GameController::stop
     void
 )
 {
-    _end = true;
     pthread_join(_thread, NULL);
 }
 
@@ -367,11 +367,13 @@ GameController::doPromptState
                 if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
                     gs.occupied = true;
 
+                    // Verify that targets are activated in order
                     if (target_id == _engaged_target_id ||
                         target_id == _engaged_target_id + 1)
                     {
                         gs.occupied = true;
                         _engaged_target_id = target_id;
+                        _engagement_triggered_time = get_current_time_ms();
                     }
                     else
                     {
@@ -386,7 +388,9 @@ GameController::doPromptState
     }
 
 
-    if (0 == _engaged_target_id)
+    // Clear targets if timer expired or if targets are activated out of order
+    if (0 == _engaged_target_id ||
+        get_current_time_ms() - _engagement_triggered_time > 5000)
     {
         SquareIter end = _engagement_targets.end();
         for (SquareIter it = _engagement_targets.begin();
@@ -532,6 +536,13 @@ controller_function
         ec->updateState();
 
         usleep(10*1000);
+    }
+
+    // Shut down grid and ball controller threads if necessary
+    if (GameController::RECORD_STATE == ec->_current_state)
+    {
+        ec->_ball_controller->stop();
+        ec->_grid_controller->stop();
     }
 
     //out_file.close();

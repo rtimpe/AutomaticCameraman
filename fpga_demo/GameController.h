@@ -64,10 +64,15 @@ public:
     bool             _current_state_done;   // true if we are done with this state
     bool             _end;                  // true if someone invokes stop() method
     FramePool *      _video_pool;           // the video pool for tracking
+
+    // PROMPT state stuff
     int              _frame_num;
     bool             _is_first_frame;
     int              _first_frame_num;
     int              _engaged_target_id;
+    double           _engagement_triggered_time;
+
+    // RECORD state stuff
     int              _current_score;
     int              _hoop_center_x;
     int              _hoop_center_y;
