@@ -28,6 +28,7 @@ public:
     double meanShortG;
     double meanShortB;
     bool occupied;
+    long timeOccupied;
 };
 
 

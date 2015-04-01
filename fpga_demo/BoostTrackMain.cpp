@@ -8,6 +8,7 @@
 #include "BallController.h"
 #include "DebugLogger.h"
 #include "FrameSaver.h"
+#include "StickController.h"
 #include <riffa.h>
 #include <execinfo.h>
 #include <signal.h>
@@ -22,7 +23,8 @@ void runtime_logic(FrameAnnotator * annotator,
                    VideoImages *    video,
                    FramePool *      videoPool,
                    GridController * grid_controller,
-				   BallController * ballController);
+				   BallController * ballController,
+				   StickController * stickController);
 
 
 // Global variables
@@ -60,9 +62,9 @@ main
     double longAlpha = atof(argv[2]);
     double diff = atof(argv[3]);
 
-    double shortAlpha = atof(argv[2]);
-    double longAlpha = atof(argv[3]);
-    double diff = atof(argv[4]);
+    double shortAlpha = atof(argv[1]);
+    double longAlpha = atof(argv[2]);
+    double diff = atof(argv[3]);
 
 
 
@@ -156,6 +158,7 @@ main
 														  shortAlpha,
 														  longAlpha,
 														  diff);
+    StickController * stickController = new StickController(grid_controller);
 
     BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
 
@@ -180,7 +183,8 @@ main
 	              video,
 	              videoPool,
 	              grid_controller,
-				  ballController);
+				  ballController,
+				  stickController);
 
     //-----------------------------------------------------------------
     // Cleanup Code
@@ -218,7 +222,8 @@ runtime_logic
     VideoImages *    video,
     FramePool *      videoPool,
     GridController * grid_controller,
-	BallController * ballController
+	BallController * ballController,
+	StickController * stickController
 )
 {
     // For the time being, just get an image from the videoPool and initialize
@@ -248,7 +253,7 @@ runtime_logic
 
     //-----------------------------------------------------------------
     // Create controller
-    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller, ballController);
+    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller, ballController, stickController);
     annotator->add(grid_annotator);
 
     //-----------------------------------------------------------------
@@ -257,6 +262,7 @@ runtime_logic
     annotator->start();     // DELAY STARTING THESE THINGS UNTIL NOW TO
     grid_controller->start();
     ballController->start();
+    stickController->start();
 
     // Just wait for the end
     while (end == 0)

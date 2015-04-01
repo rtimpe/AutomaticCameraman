@@ -19,7 +19,7 @@ GridSquare::GridSquare
 )
 : _x0(x0), _y0(y0), _w(w), _h(h), runningMeanR(0.0), runningMeanSquaredR(0.0),
   runningMeanG(0.0), runningMeanSquaredG(0.0), runningMeanB(0.0), runningMeanSquaredB(0.0),
-  meanShortR(0.0), meanShortG(0.0), meanShortB(0.0), occupied(false)
+  meanShortR(0.0), meanShortG(0.0), meanShortB(0.0), occupied(false), timeOccupied(0)
 {}
 
 
@@ -135,8 +135,10 @@ void* trackerFunc(void *arg) {
 							occupiedChange = true;
 						}
 						gs.occupied = true;
+						gs.timeOccupied++;
 					} else {
 						gs.occupied = false;
+						gs.timeOccupied = 0;
 					}
 				}
 //				if (gs._x0 < 1000 && gs._x0 > 900) {
@@ -148,48 +150,48 @@ void* trackerFunc(void *arg) {
 			}
 		}
 
-		if (occupiedChange) {
-			gridController->timer = 200;
-		} else if (frameNum > 500) {
-			gridController->timer--;
-			if (gridController->timer < 0) {
-				gridController->timer = 200;
-				cout << "reseting\n";
-				for (int i = 0; i < gridController->_squares.size(); i++) {
-					GridSquare &gs = gridController->_squares[i];
-					double averageR = 0.0;
-					double averageG = 0.0;
-					double averageB = 0.0;
-					for (int j = gs._x0; j < gs._x0 + gs._w; j++) {
-						for (int k = gs._y0; k < gs._y0 + gs._h; k++) {
-							//cout << "start j: " << j << " k: " << k << endl;
-							cv::Vec3b pixel = img.at<cv::Vec3b>(k, j);
-							//cout << "end\n";
-							averageB += pixel[0];
-							averageG += pixel[1];
-							averageR += pixel[2];
-						}
-					}
-					averageR /= (double) (gs._w * gs._h);
-					averageG /= (double) (gs._w * gs._h);
-					averageB /= (double) (gs._w * gs._h);
-
-
-					gs.runningMeanB = averageB;
-					gs.runningMeanR = averageR;
-					gs.runningMeanG = averageG;
-					gs.meanShortB = averageB;
-					gs.meanShortR = averageR;
-					gs.meanShortG = averageG;
-					gs.runningMeanSquaredB = averageB * averageB;
-					gs.runningMeanSquaredR = averageR * averageR;
-					gs.runningMeanSquaredG = averageG * averageG;
-
-					gs.occupied = false;
-					frameNum = 0;
-				}
-			}
-		}
+//		if (occupiedChange) {
+//			gridController->timer = 200;
+//		} else if (frameNum > 500) {
+//			gridController->timer--;
+//			if (gridController->timer < 0) {
+//				gridController->timer = 200;
+//				cout << "reseting\n";
+//				for (int i = 0; i < gridController->_squares.size(); i++) {
+//					GridSquare &gs = gridController->_squares[i];
+//					double averageR = 0.0;
+//					double averageG = 0.0;
+//					double averageB = 0.0;
+//					for (int j = gs._x0; j < gs._x0 + gs._w; j++) {
+//						for (int k = gs._y0; k < gs._y0 + gs._h; k++) {
+//							//cout << "start j: " << j << " k: " << k << endl;
+//							cv::Vec3b pixel = img.at<cv::Vec3b>(k, j);
+//							//cout << "end\n";
+//							averageB += pixel[0];
+//							averageG += pixel[1];
+//							averageR += pixel[2];
+//						}
+//					}
+//					averageR /= (double) (gs._w * gs._h);
+//					averageG /= (double) (gs._w * gs._h);
+//					averageB /= (double) (gs._w * gs._h);
+//
+//
+//					gs.runningMeanB = averageB;
+//					gs.runningMeanR = averageR;
+//					gs.runningMeanG = averageG;
+//					gs.meanShortB = averageB;
+//					gs.meanShortR = averageR;
+//					gs.meanShortG = averageG;
+//					gs.runningMeanSquaredB = averageB * averageB;
+//					gs.runningMeanSquaredR = averageR * averageR;
+//					gs.runningMeanSquaredG = averageG * averageG;
+//
+//					gs.occupied = false;
+//					frameNum = 0;
+//				}
+//			}
+//		}
 
 		frameNum++;
 

@@ -53,8 +53,8 @@ void* ballFunc(void *arg) {
 			sY = sY / sLen;
 			double newVX = sX - ballController->vX;
 			double newVY = sY - ballController->vY;
-			cout << "x: " << newVX << endl;
-			cout << "Y: " << newVY << endl;
+//			cout << "x: " << newVX << endl;
+//			cout << "Y: " << newVY << endl;
 			double len = std::sqrt(newVX * newVX + newVY * newVY);
 			ballController->vX = 2.0 * (newVX / len);
 			ballController->vY = 2.0 * (newVY / len);
