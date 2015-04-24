@@ -105,7 +105,7 @@ void* trackerFunc(void *arg) {
 				gs.runningMeanSquaredR = averageR * averageR;
 				gs.runningMeanSquaredG = averageG * averageG;
 			} else {
-				if (!gs.occupied) {
+				if (!gs.occupied || gs.timeOccupied < 0) {
 					double alpha = gridController->longAlpha;
 					gs.runningMeanR = (1.0 - alpha) * gs.runningMeanR + alpha * averageR;
 					gs.runningMeanSquaredR = (1.0 - alpha) * gs.runningMeanSquaredR + alpha * averageR * averageR;
@@ -120,6 +120,10 @@ void* trackerFunc(void *arg) {
 				gs.meanShortG = (1.0 - smallAlpha) * gs.meanShortG + smallAlpha * averageG;
 				gs.meanShortR = (1.0 - smallAlpha) * gs.meanShortR + smallAlpha * averageR;
 
+				if (gs.timeOccupied < 0) {
+					gs.timeOccupied++;
+				}
+
 				double stdR = std::sqrt(gs.runningMeanSquaredR - gs.runningMeanR * gs.runningMeanR);
 				double stdG = std::sqrt(gs.runningMeanSquaredG - gs.runningMeanG * gs.runningMeanG);
 				double stdB = std::sqrt(gs.runningMeanSquaredB - gs.runningMeanB * gs.runningMeanB);
@@ -129,17 +133,22 @@ void* trackerFunc(void *arg) {
 				double diffB = std::abs(gs.meanShortB - gs.runningMeanB);
 				//cout << "long: " << gs.runningMeanR << " short: " << gs.meanShortR << " average: " << averageR << " std: " << stdR << endl;
 				double diff = gridController->diff;
-				if (frameNum > 500) {
+				if (frameNum > 500 && gs.timeOccupied >= 0) {
 					if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
-						if (gs.occupied == false) {
-							occupiedChange = true;
-						}
+//						if (gs.occupied == false) {
+//							occupiedChange = true;
+//						}
 						gs.occupied = true;
 						gs.timeOccupied++;
 					} else {
 						gs.occupied = false;
 						gs.timeOccupied = 0;
 					}
+				}
+
+				if (gs.timeOccupied >= 400) {
+					gs.occupied = false;
+					gs.timeOccupied = -500;
 				}
 //				if (gs._x0 < 1000 && gs._x0 > 900) {
 //					gs.occupied = true;

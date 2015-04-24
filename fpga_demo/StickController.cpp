@@ -22,7 +22,7 @@ StickController::StickController
 (
     GridController *gc
 )
-: gc(gc), _end(false), p0(600, 400), p1(800, 400), tracking(false)
+: gc(gc), _end(false), p0(600, 400), p1(800, 400), tracking(false), center(700, 400), theta(3.14159265 / 2.0)
 {
 
 }
@@ -50,61 +50,147 @@ double minimumDistance(Vec2d v, Vec2d w, Vec2d p) {
   return cv::norm(p - projection);
 }
 
+double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1) {
+	int numActivated = 0;
+	for (int i = 0; i < closeSquares.size(); i++) {
+		GridSquare &gs = closeSquares[i];
+
+		Vec2d p(gs._x0, gs._y0);
+		if (gs.occupied && minimumDistance(p0, p1, p) < 20) {
+			numActivated++;
+		}
+
+//		double coef = 1.0 / ((double) gs.timeOccupied / 10.0);
+//		if (gs.occupied && cv::norm(p - sc->p0) < 30) {
+//			newP0[0] += coef * p[0];
+//			newP0[1] += coef * p[1];
+//			p0Count++;
+//			p0Tot += coef;
+//		}
+//		if (gs.occupied && cv::norm(p - sc->p1) < 30) {
+//			newP1[0] += coef * p[0];
+//			newP1[1] += coef * p[1];
+//			p1Count++;
+//			p1Tot += coef;
+//		}
+	}
+	double cost = std::numeric_limits<double>::max();
+	if (numActivated != 0) {
+		cost = 1.0 / numActivated;
+	}
+	return cost;
+}
+
+std::vector<Vec2d> computeEndpoints(Vec2d center, double theta, int len) {
+	Vec2d p0, p1;
+	p0[0] = -1.0 * sin(theta);
+	p0[1] = cos(theta);
+	p0 *= len;
+	p0 += center;
+	p1[0] = sin(theta);
+	p1[1] = -1.0 * cos(theta);
+	p1 *= len;
+	p1 += center;
+	std::vector<Vec2d> ret;
+	ret.push_back(p0);
+	ret.push_back(p1);
+	return ret;
+}
 
 void* stickFunc(void *arg) {
 	StickController *sc = (StickController *)arg;
 
 	while (!sc->_end) {
-		int numActivated = 0;
-
-		Vec2d newP0(0,0);
-		Vec2d newP1(0,0);
-		int p0Count = 0;
-		int p1Count = 0;
-		double p0Tot = 0.0;
-		double p1Tot = 0.0;
+		std::vector<GridSquare> closeSquares;
 		for (int i = 0; i < sc->gc->_squares.size(); i++) {
 			GridSquare &gs = sc->gc->_squares[i];
 
 			Vec2d p(gs._x0, gs._y0);
-			if (gs.occupied && minimumDistance(sc->p0, sc->p1, p) < 50) {
-				numActivated++;
+			if (cv::norm(sc->center - p) < 300) {
+				closeSquares.push_back(gs);
 			}
+		}
+		double minCost = std::numeric_limits<double>::max();
 
-			double coef = 1.0 / ((double) gs.timeOccupied / 10.0);
-			if (gs.occupied && cv::norm(p - sc->p0) < 30) {
-				newP0[0] += coef * p[0];
-				newP0[1] += coef * p[1];
-				p0Count++;
-				p0Tot += coef;
-			}
-			if (gs.occupied && cv::norm(p - sc->p1) < 30) {
-				newP1[0] += coef * p[0];
-				newP1[1] += coef * p[1];
-				p1Count++;
-				p1Tot += coef;
+		for (int i = -30; i < 30; i += 10) {
+			for (int j = -30; j < 30; j += 10) {
+				for (double t = -3.14159 / 4.0; t < 3.14159 / 4.0; t += .6) {
+					Vec2d offset(i, j);
+					Vec2d newCenter = sc->center + offset;
+					double newTheta = sc->theta + t;
+					std::vector<Vec2d> pts = computeEndpoints(newCenter, newTheta, sc->len);
+					if (pts[0][0] < 0 || pts[0][0] > sc->gc->_img_w || pts[0][1] < 0 || pts[0][1] > sc->gc->_img_h ||
+							pts[1][0] < 0 || pts[1][0] > sc->gc->_img_w || pts[1][1] < 0 || pts[1][1] > sc->gc->_img_h) {
+						continue;
+					}
+
+					double cost = costFunc(closeSquares, pts[0], pts[1]);
+					if (cost < std::numeric_limits<double>::max()) {
+						cout << cost << endl;
+					}
+					if (cost < minCost) {
+						minCost = cost;
+						sc->center = newCenter;
+						sc->theta = newTheta;
+					}
+				}
 			}
 		}
 
-		newP0 /= (double) p0Tot;
-		newP1 /= (double) p1Tot;
-		cout << p0Count << " " << p1Count << endl;
-		if (numActivated >= 80) {
-//			cout << newP0[0] << " " << newP0[1] << endl;
-			sc->tracking = true;
-			if (p0Count > 0) {
-				sc->p0 = .8 * sc->p0 + .2 * newP0;
-			}
-			if (p1Count > 0) {
-				sc->p1 = .8 * sc->p1 + .2 * newP1;
-			}
-		} else {
-			sc->tracking = false;
-			sc->p0[0] = 600;
-			sc->p0[1] = 400;
-			sc->p1[0] = 800;
-			sc->p1[1] = 400;
-		}
+		std::vector<Vec2d> pts = computeEndpoints(sc->center, sc->theta, sc->len);
+		sc->p0 = pts[0];
+		sc->p1 = pts[1];
+//		sc->theta += .0001;
+//		int numActivated = 0;
+//
+//		Vec2d newP0(0,0);
+//		Vec2d newP1(0,0);
+//		int p0Count = 0;
+//		int p1Count = 0;
+//		double p0Tot = 0.0;
+//		double p1Tot = 0.0;
+//		for (int i = 0; i < sc->gc->_squares.size(); i++) {
+//			GridSquare &gs = sc->gc->_squares[i];
+//
+//			Vec2d p(gs._x0, gs._y0);
+//			if (gs.occupied && minimumDistance(sc->p0, sc->p1, p) < 50) {
+//				numActivated++;
+//			}
+//
+//			double coef = 1.0 / ((double) gs.timeOccupied / 10.0);
+//			if (gs.occupied && cv::norm(p - sc->p0) < 30) {
+//				newP0[0] += coef * p[0];
+//				newP0[1] += coef * p[1];
+//				p0Count++;
+//				p0Tot += coef;
+//			}
+//			if (gs.occupied && cv::norm(p - sc->p1) < 30) {
+//				newP1[0] += coef * p[0];
+//				newP1[1] += coef * p[1];
+//				p1Count++;
+//				p1Tot += coef;
+//			}
+//		}
+//
+//		newP0 /= (double) p0Tot;
+//		newP1 /= (double) p1Tot;
+//		cout << p0Count << " " << p1Count << endl;
+//		double alpha = 0.7;
+//		if (numActivated >= 40) {
+//			sc->tracking = true;
+//			if (p0Count > 0 && cv::norm(newP1 - newP0) > 80) {
+//				sc->p0 = alpha * sc->p0 + (1.0 - alpha) * newP0;
+//			}
+//			if (p1Count > 0 && cv::norm(newP1 - newP0) > 80) {
+//				sc->p1 = alpha * sc->p1 + (1.0 - alpha) * newP1;
+//			}
+//		} else {
+//			sc->tracking = false;
+//			sc->p0[0] = 600;
+//			sc->p0[1] = 400;
+//			sc->p1[0] = 800;
+//			sc->p1[1] = 400;
+//		}
 
 		usleep(1000);
 	}
