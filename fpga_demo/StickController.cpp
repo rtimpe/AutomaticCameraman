@@ -12,6 +12,7 @@
 #include "GridController.h"
 #include <iostream>
 #include <cmath>
+#include "StickEKF.h"
 
 using std::cout;
 using std::endl;
@@ -100,6 +101,26 @@ std::vector<Vec2d> computeEndpoints(Vec2d center, double theta, int len) {
 void* stickFunc(void *arg) {
 	StickController *sc = (StickController *)arg;
 
+	StickEKF sekf;
+	static const double _P0[] = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+			0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+	Vector x(6);
+	x(1) = 700;
+	x(2) = 0.0;
+	x(3) = 400;
+	x(4) = 0.0;
+	x(5) = 3.14159 / 2.0;
+	x(6) = 0.0;
+
+	Matrix P0(6, 6, _P0);
+	sekf.init(x, P0);
+
+	cout << sekf.getX()(1) << endl;
+
 	while (!sc->_end) {
 		std::vector<GridSquare> closeSquares;
 		for (int i = 0; i < sc->gc->_squares.size(); i++) {
@@ -112,9 +133,9 @@ void* stickFunc(void *arg) {
 		}
 		double minCost = std::numeric_limits<double>::max();
 
-		for (int i = -30; i < 30; i += 10) {
-			for (int j = -30; j < 30; j += 10) {
-				for (double t = -3.14159 / 4.0; t < 3.14159 / 4.0; t += .6) {
+		for (int i = -10; i < 10; i += 5) {
+			for (int j = -10; j < 10; j += 5) {
+				for (double t = -3.14159 / 10.0; t < 3.14159 / 10.0; t += .2) {
 					Vec2d offset(i, j);
 					Vec2d newCenter = sc->center + offset;
 					double newTheta = sc->theta + t;
@@ -125,9 +146,6 @@ void* stickFunc(void *arg) {
 					}
 
 					double cost = costFunc(closeSquares, pts[0], pts[1]);
-					if (cost < std::numeric_limits<double>::max()) {
-						cout << cost << endl;
-					}
 					if (cost < minCost) {
 						minCost = cost;
 						sc->center = newCenter;
@@ -137,9 +155,26 @@ void* stickFunc(void *arg) {
 			}
 		}
 
+		// kalman stuff
+		Vector u;
+		Vector v(3, 1);
+		v(1) = sc->center[0];
+		v(2) = sc->center[1];
+		v(3) = sc->theta;
+
+		sekf.step(u, v);
+		cout << sekf.getX()(1) << " " << sekf.getX()(2) << endl;
+		cout << "sc pos: " << sc->center[0] << endl;
+
+		Vector X = sekf.getX();
+		sc->center[0] = X(1);
+		sc->center[1] = X(3);
+		sc->theta = X(5);
+
 		std::vector<Vec2d> pts = computeEndpoints(sc->center, sc->theta, sc->len);
 		sc->p0 = pts[0];
 		sc->p1 = pts[1];
+
 //		sc->theta += .0001;
 //		int numActivated = 0;
 //
