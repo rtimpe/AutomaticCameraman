@@ -51,14 +51,22 @@ double minimumDistance(Vec2d v, Vec2d w, Vec2d p) {
   return cv::norm(p - projection);
 }
 
-double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1) {
+double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d center) {
+	double distTerm = 0.0;
 	int numActivated = 0;
 	for (int i = 0; i < closeSquares.size(); i++) {
 		GridSquare &gs = closeSquares[i];
 
-		Vec2d p(gs._x0, gs._y0);
-		if (gs.occupied && minimumDistance(p0, p1, p) < 20) {
+		double x = gs._x0 + (double)gs._w / 2.0;
+		double y = gs._y0 + (double)gs._h / 2.0;
+		Vec2d p(x, y);
+		if (gs.occupied && minimumDistance(p0, p1, p) < 10) {
 			numActivated++;
+			double dist = cv::norm(p - center);
+			if (dist == 0.0) {
+				dist = 0.000000001;
+			}
+			distTerm += 1.0 / dist;
 		}
 
 //		double coef = 1.0 / ((double) gs.timeOccupied / 10.0);
@@ -76,8 +84,8 @@ double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1) {
 //		}
 	}
 	double cost = std::numeric_limits<double>::max();
-	if (numActivated != 0) {
-		cost = 1.0 / numActivated;
+	if (numActivated > 5) {
+		cost = 1.0 /distTerm;
 	}
 	return cost;
 }
@@ -133,8 +141,12 @@ void* stickFunc(void *arg) {
 		}
 		double minCost = std::numeric_limits<double>::max();
 
-		for (int i = -10; i < 10; i += 5) {
-			for (int j = -10; j < 10; j += 5) {
+		for (int i = -10; i <= 10; i += 5) {
+			for (int j = -10; j <= 10; j += 5) {
+//		for (int i=0; i < 3; i++) {
+//			int newX = (i / 2) * (-1 * ((i % 2)) + 1) * 5;
+//			for (int j=0; j < 3; j++) {
+//				int newY = (j / 2) * (-1 * ((j % 2)) + 1) * 5;
 				for (double t = -3.14159 / 10.0; t < 3.14159 / 10.0; t += .2) {
 					Vec2d offset(i, j);
 					Vec2d newCenter = sc->center + offset;
@@ -145,7 +157,7 @@ void* stickFunc(void *arg) {
 						continue;
 					}
 
-					double cost = costFunc(closeSquares, pts[0], pts[1]);
+					double cost = costFunc(closeSquares, pts[0], pts[1], newCenter);
 					if (cost < minCost) {
 						minCost = cost;
 						sc->center = newCenter;
