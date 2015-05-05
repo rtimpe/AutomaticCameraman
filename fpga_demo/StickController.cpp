@@ -85,7 +85,7 @@ double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d 
 	}
 	double cost = std::numeric_limits<double>::max();
 	if (numActivated > 5) {
-		cost = 1.0 /distTerm;
+		cost = 1.0 / numActivated;//distTerm;
 	}
 	return cost;
 }
