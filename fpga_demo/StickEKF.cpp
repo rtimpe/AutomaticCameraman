@@ -12,17 +12,15 @@
 StickEKF::StickEKF()
 {
 	setDim(6, 0, 3, 3, 3);
-	Period = 0.02;
-	Gravity = 9.8;
-	Bfriction = 0.35;
-	Portance = 3.92;
-	Mass = 1000;
+	period = 0.02;
+	drag = 5;
+	mass = 100;
 }
 
 
 void StickEKF::makeA() {
 	A(1,1) = 1.0;
-	A(1,2) = Period;
+	A(1,2) = period;
 	A(1,3) = 0.0;
 	A(1,4) = 0.0;
 	A(1,5) = 0.0;
@@ -38,7 +36,7 @@ void StickEKF::makeA() {
 	A(3,1) = 0.0;
 	A(3,2) = 0.0;
 	A(3,3) = 1.0;
-	A(3,4) = Period;
+	A(3,4) = period;
 	A(3,5) = 0.0;
 	A(3,6) = 0.0;
 
@@ -54,14 +52,14 @@ void StickEKF::makeA() {
 	A(5,3) = 0.0;
 	A(5,4) = 0.0;
 	A(5,5) = 1.0;
-	A(5,6) = Period;
+	A(5,6) = period - period*period*drag/mass;
 
 	A(6,1) = 0.0;
 	A(6,2) = 0.0;
 	A(6,3) = 0.0;
 	A(6,4) = 0.0;
 	A(6,5) = 0.0;
-	A(6,6) = 1.0;
+	A(6,6) = 1.0 - 2 * period*drag/mass;
 }
 void StickEKF::makeH() {
 	H(1,1) = 1.0;
@@ -99,17 +97,17 @@ void StickEKF::makeV() {
 	V(3,3) = 1.0;
 }
 void StickEKF::makeR() {
-	R(1,1) = 0.1;
+	R(1,1) = 0.01;
 	R(1,2) = 0.0;
 	R(1,3) = 0.0;
 
 	R(2,1) = 0.0;
-	R(2,2) = 0.1;
+	R(2,2) = 0.01;
 	R(2,3) = 0.0;
 
 	R(3,1) = 0.0;
 	R(3,2) = 0.0;
-	R(3,3) = 100.0;
+	R(3,3) = 25.0;
 }
 void StickEKF::makeW() {
 	W(1,1) = 0.0;
@@ -152,12 +150,16 @@ void StickEKF::makeQ() {
 }
 void StickEKF::makeProcess() {
 	Vector x_(x.size());
-	x_(1) = x(1) + x(2)*Period;
+	x_(1) = x(1) + x(2)*period;
 	x_(2) = x(2);
-	x_(3) = x(3) + x(4)*Period;
+	x_(3) = x(3) + x(4)*period;
 	x_(4) = x(4);
-	x_(5) = x(5) + x(6)*Period;
-	x_(6) = x(6) > 1.0 ? 1.0 : x(6);
+	x_(5) = x(5) + x(6)*period - period*period*drag*x(6) / (2 * mass);
+	x_(6) = x(6) - period*drag*x(6)/mass;
+
+	if (x_(6) > 1.0) {
+		x_(6) = 1.0;
+	}
 	if (x_(1) < 0) {
 		x_(1) = 0;
 		x_(2) = 0;

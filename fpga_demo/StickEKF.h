@@ -25,7 +25,7 @@ protected:
         void makeProcess();
         void makeMeasure();
 
-        double Period, Mass, Bfriction, Portance, Gravity;
+        double period, mass, drag;
 };
 
 typedef StickEKF::Vector Vector;

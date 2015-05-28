@@ -51,7 +51,8 @@ double minimumDistance(Vec2d v, Vec2d w, Vec2d p) {
   return cv::norm(p - projection);
 }
 
-double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d center) {
+double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d newCenter, Vec2d oldCenter,
+		double newTheta, double oldTheta) {
 	double distTerm = 0.0;
 	int numActivated = 0;
 	for (int i = 0; i < closeSquares.size(); i++) {
@@ -60,9 +61,9 @@ double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d 
 		double x = gs._x0 + (double)gs._w / 2.0;
 		double y = gs._y0 + (double)gs._h / 2.0;
 		Vec2d p(x, y);
-		if (gs.occupied && minimumDistance(p0, p1, p) < 10) {
+		if (gs.occupied && minimumDistance(p0, p1, p) < 20) {
 			numActivated++;
-			double dist = cv::norm(p - center);
+			double dist = cv::norm(p - newCenter);
 			if (dist == 0.0) {
 				dist = 0.000000001;
 			}
@@ -85,7 +86,11 @@ double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d 
 	}
 	double cost = std::numeric_limits<double>::max();
 	if (numActivated > 5) {
-		cost = 1.0 / numActivated;//distTerm;
+		double activatedTerm = 10.0 / numActivated;
+		double distTerm = cv::norm(newCenter - oldCenter);
+		double angleTerm = abs(newTheta - oldTheta);
+//		double denom = activatedTerm + distTerm + angleTerm;
+		cost = activatedTerm + angleTerm / 100.5 + distTerm / 4000.0;
 	}
 	return cost;
 }
@@ -141,6 +146,8 @@ void* stickFunc(void *arg) {
 		}
 		double minCost = std::numeric_limits<double>::max();
 
+		Vec2d oldCenter = sc->center;
+		double oldTheta = sc->theta;
 		for (int i = -10; i <= 10; i += 5) {
 			for (int j = -10; j <= 10; j += 5) {
 //		for (int i=0; i < 3; i++) {
@@ -157,7 +164,7 @@ void* stickFunc(void *arg) {
 						continue;
 					}
 
-					double cost = costFunc(closeSquares, pts[0], pts[1], newCenter);
+					double cost = costFunc(closeSquares, pts[0], pts[1], newCenter, oldCenter, newTheta, oldTheta);
 					if (cost < minCost) {
 						minCost = cost;
 						sc->center = newCenter;
@@ -239,7 +246,8 @@ void* stickFunc(void *arg) {
 //			sc->p1[1] = 400;
 //		}
 
-		usleep(1000);
+
+		usleep(500);
 	}
 
 	return NULL;
