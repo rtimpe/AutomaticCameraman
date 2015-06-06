@@ -44,6 +44,7 @@ public:
 	void stop();
 
 
+	std::vector<GridSquare> _squares;
     FramePool *videoPool; // the video pool for tracking
 
 	int _img_w;    // width of image in pixels

@@ -5,7 +5,9 @@
 #include "FrameDisplayer.h"
 #include "GridAnnotator.h"
 #include "GridController.h"
+#include "GameController.h"
 #include "BallController.h"
+#include "GameAnnotator.h"
 #include "DebugLogger.h"
 #include "FrameSaver.h"
 #include "StickController.h"
@@ -23,8 +25,8 @@ void runtime_logic(FrameAnnotator * annotator,
                    VideoImages *    video,
                    FramePool *      videoPool,
                    GridController * grid_controller,
-				   BallController * ballController,
-				   StickController * stickController);
+				   StickController * stickController,
+				   GameController * gameController);
 
 
 // Global variables
@@ -61,11 +63,6 @@ main
     double shortAlpha = atof(argv[1]);
     double longAlpha = atof(argv[2]);
     double diff = atof(argv[3]);
-
-    double shortAlpha = atof(argv[1]);
-    double longAlpha = atof(argv[2]);
-    double diff = atof(argv[3]);
-
 
 
     //----------------------------------------------------------------
@@ -160,11 +157,14 @@ main
 														  diff);
     StickController * stickController = new StickController(grid_controller);
 
-    BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
-
-    BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
+//    BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
 
     debug_logger->log("Creating new grid controller");
+
+    //-----------------------------------------------------------------
+    // Start the various threads
+    video->start();
+    displayer->start();
 
     //-----------------------------------------------------------------
     // Create game controller
@@ -174,8 +174,9 @@ main
                            video->_height,
                            30,
                            videoPool,
-                           ballController,
+                           stickController,
                            grid_controller);
+    game_controller->start();
 
 	//-----------------------------------------------------------------
 	// Enter runtime logic
@@ -183,8 +184,8 @@ main
 	              video,
 	              videoPool,
 	              grid_controller,
-				  ballController,
-				  stickController);
+				  stickController,
+				  game_controller);
 
     //-----------------------------------------------------------------
     // Cleanup Code
@@ -222,8 +223,8 @@ runtime_logic
     VideoImages *    video,
     FramePool *      videoPool,
     GridController * grid_controller,
-	BallController * ballController,
-	StickController * stickController
+	StickController * stickController,
+	GameController * game_controller
 )
 {
     // For the time being, just get an image from the videoPool and initialize
@@ -253,15 +254,20 @@ runtime_logic
 
     //-----------------------------------------------------------------
     // Create controller
-    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller, ballController, stickController);
+    GridAnnotator * grid_annotator = new GridAnnotator(0, grid_controller, NULL, stickController);
     annotator->add(grid_annotator);
+
+    GameAnnotator * game_annotator =
+        new GameAnnotator(1, game_controller, grid_annotator);
+
+    annotator->add(game_annotator);
 
     //-----------------------------------------------------------------
     // Release the frame
     videoPool->release(frame);
     annotator->start();     // DELAY STARTING THESE THINGS UNTIL NOW TO
     grid_controller->start();
-    ballController->start();
+//    ballController->start();
     stickController->start();
 
     // Just wait for the end

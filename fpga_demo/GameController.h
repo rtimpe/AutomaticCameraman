@@ -3,6 +3,7 @@
 
 #include "Public.h"
 #include "GridController.h"
+#include "StickController.h"
 
 #define _INTERFACE_ class
 #define _IMPLEMENTS_ public
@@ -35,7 +36,7 @@ public:
         int                   img_h,
         int                   recording_duration,
         FramePool *           video_pool,
-        BallController *      ball_controller,
+        StickController *     stick_controller,
         GridController *      grid_controller
     );
 	~GameController(void);
@@ -73,7 +74,7 @@ public:
     int              _hoop_center_y;
     int              _hoop_radius;
 
-    BallController *      _ball_controller;      // We need to know location of ball
+    StickController *     _stick_controller;      // We need to know location of ball
     GridController *      _grid_controller;
 
     std::vector<GridSquare>  _engagement_targets;      // grid of squares

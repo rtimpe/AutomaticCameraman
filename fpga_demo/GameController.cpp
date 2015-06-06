@@ -1,6 +1,5 @@
 #include "GameController.h"
 #include "FramePool.h"
-#include "BallController.h"
 #include "GridController.h"
 
 using std::cout;
@@ -24,7 +23,7 @@ GameController::GameController
     int                   img_h,
     int                   recording_duration,
 	FramePool *           video_pool,
-    BallController *      ball_controller,
+    StickController *     stick_controller,
 	GridController *      grid_controller
 )
 : _toggleRecord(toggleRecord),
@@ -36,7 +35,7 @@ GameController::GameController
   _frame_num(0), _is_first_frame(true), _first_frame_num(0),
   _engaged_target_id(0), _current_score(0),
   _hoop_center_x(img_w/2), _hoop_center_y(60), _hoop_radius(80),
-  _ball_controller(ball_controller), _grid_controller(grid_controller)
+  _stick_controller(stick_controller), _grid_controller(grid_controller)
 {
     _state_start_time = get_current_time_ms();
 
@@ -89,13 +88,13 @@ GameController::updateState
             _current_state = RECORD_STATE;
 
             _grid_controller->start();
-            _ball_controller->start();
+            _stick_controller->start();
             _current_score = 0;
             break;
         case RECORD_STATE:
             _current_state = FEEDBACK_STATE;
 
-            _ball_controller->stop();
+            _stick_controller->stop();
             _grid_controller->stop();
             break;
         case FEEDBACK_STATE:
@@ -107,7 +106,7 @@ GameController::updateState
             _is_first_frame = true;
             resetEngagementTargets();
 
-            _grid_controller->reset();
+//            _grid_controller->reset();
         }
 
         _current_state_done = false;
@@ -142,14 +141,14 @@ GameController::resetEngagementTargets
     void
 )
 {
-    SquareIter end = _engagement_targets.end();
-    for (SquareIter it = _engagement_targets.begin();
-         end != it; ++it)
-    {
-        GridSquare & gs = *it;
-        gs.reset();
-    }
-    _engaged_target_id = 0;
+//    SquareIter end = _engagement_targets.end();
+//    for (SquareIter it = _engagement_targets.begin();
+//         end != it; ++it)
+//    {
+//        GridSquare & gs = *it;
+//        gs.reset();
+//    }
+//    _engaged_target_id = 0;
 }
 
 
@@ -445,12 +444,12 @@ GameController::doRecordState
         _recording_started = true;
     }
 
-    // Update Score if the ball is inside the hoop
-    float xdiff = static_cast<float>(_hoop_center_x - _ball_controller->xPos);
-    float ydiff = static_cast<float>(_hoop_center_y - _ball_controller->yPos);
-    float distance = sqrtf(xdiff*xdiff + ydiff*ydiff);
-    if (distance <= static_cast<float>(_hoop_radius))
-        ++_current_score;
+//    // Update Score if the ball is inside the hoop
+//    float xdiff = static_cast<float>(_hoop_center_x - _ball_controller->xPos);
+//    float ydiff = static_cast<float>(_hoop_center_y - _ball_controller->yPos);
+//    float distance = sqrtf(xdiff*xdiff + ydiff*ydiff);
+//    if (distance <= static_cast<float>(_hoop_radius))
+//        ++_current_score;
 
     double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
     _current_state_done = time_elapsed > _recording_duration;
