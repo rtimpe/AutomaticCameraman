@@ -39,11 +39,16 @@ GridAnnotator::draw_long_term
 
     }
 
-	if (stickController->tracking) {
-		draw_line(img, stickController->p0[0], stickController->p0[1], stickController->p1[0], stickController->p1[1], 5, 0, 255, 255, 255);
-	} else {
-		draw_line(img, stickController->p0[0], stickController->p0[1], stickController->p1[0], stickController->p1[1], 5, 0, 0, 255, 255);
-	}
+	//if (stickController->tracking) {
+	//	draw_line(img, stickController->p0[0], stickController->p0[1], stickController->p1[0], stickController->p1[1], 5, 0, 255, 255, 255);
+	//} else {
+	//	draw_line(img, stickController->p0[0], stickController->p0[1], stickController->p1[0], stickController->p1[1], 5, 0, 0, 255, 255);
+	//}
+
+    draw_line(img, stickController->p0[0], stickController->p0[1], stickController->p1[0], stickController->p1[1], 5,
+              stickController->_stick_color(0), stickController->_stick_color(1), stickController->_stick_color(2), stickController->_stick_color(3));
+
+
 
 //    if (ballController->hit) {
 //    	draw_circle(img, ballController->xPos, ballController->yPos, ballController->radius, 3, 0, 255, 255, 255);

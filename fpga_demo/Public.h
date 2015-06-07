@@ -318,6 +318,7 @@ protected:
 // Creates string representation of date+time
 std::string get_current_datetime_string(void);
 double get_current_time_ms(void);
-
+unsigned long long get_current_time_ms_ll(void);
+unsigned long long get_current_time_s_ll(void);
 
 #endif

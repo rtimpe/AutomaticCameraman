@@ -119,3 +119,26 @@ get_current_time_ms
     gettimeofday(&current_time, NULL);
     return current_time.tv_sec*1000.0 + current_time.tv_usec/1000.0;
 }
+
+unsigned long long
+get_current_time_ms_ll
+(
+    void
+)
+{
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);
+    return current_time.tv_sec*1000ll + current_time.tv_usec/1000ll;
+}
+
+unsigned long long
+get_current_time_s_ll
+(
+    void
+)
+{
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);
+    return current_time.tv_sec;
+}
+

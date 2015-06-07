@@ -10,12 +10,14 @@
 #include "GameAnnotator.h"
 #include "DebugLogger.h"
 #include "FrameSaver.h"
+#include "AudioPlayer.h"
 #include "StickController.h"
 #include <riffa.h>
 #include <execinfo.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <cstdlib>
+#include <algorithm>
 
 
 // Forward declarations for functions
@@ -48,6 +50,9 @@ char images_folder[] = "images";
 DebugLogger *       debug_logger = 0;
 static FrameSaver * frame_saver = 0;
 
+
+int myrandom(int i) { return std::rand() % i;};
+
 //*****************************************************************************
 // * main
 //*****************************************************************************
@@ -63,7 +68,6 @@ main
     double shortAlpha = atof(argv[1]);
     double longAlpha = atof(argv[2]);
     double diff = atof(argv[3]);
-
 
     //----------------------------------------------------------------
     // Create a debug logger
@@ -155,7 +159,8 @@ main
 														  shortAlpha,
 														  longAlpha,
 														  diff);
-    StickController * stickController = new StickController(grid_controller);
+    AudioPlayer * audio_player = new AudioPlayer();
+    StickController * stickController = new StickController(grid_controller, audio_player);
 
 //    BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
 
