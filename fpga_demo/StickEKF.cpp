@@ -149,7 +149,7 @@ void StickEKF::makeQ() {
 	Q(3,3) = 0.1;
 }
 void StickEKF::makeProcess() {
-	Vector x_(x.size());
+	KVector x_(x.size());
 	x_(1) = x(1) + x(2)*period;
 	x_(2) = x(2);
 	x_(3) = x(3) + x(4)*period;

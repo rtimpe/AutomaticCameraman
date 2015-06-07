@@ -28,7 +28,7 @@ protected:
         double period, mass, drag;
 };
 
-typedef StickEKF::Vector Vector;
-typedef StickEKF::Matrix Matrix;
+typedef StickEKF::Vector KVector;
+typedef StickEKF::Matrix KMatrix;
 
 #endif /* STICKEKF_H_ */

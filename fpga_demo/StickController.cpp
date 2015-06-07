@@ -10,7 +10,6 @@
 
 #include "StickController.h"
 #include "GridController.h"
-#include "AudioPlayer.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -24,10 +23,9 @@ using std::queue;
 
 StickController::StickController
 (
-    GridController *gc,
-    AudioPlayer    *ap
+    GridController *gc
 )
-: gc(gc), _ap(ap), _end(false), p0(600, 400), p1(800, 400), tracking(false), center(700, 400), theta(3.14159265 / 2.0),
+: gc(gc), _end(false), p0(600, 400), p1(800, 400), tracking(false), center(700, 400), theta(3.14159265 / 2.0),
   _xrange(0), _yrange(0), _anglerange(0), _time_limit_s(10), _last_update_time_s(0),
   _stick_color(0, 0, 255, 255)
 {
@@ -128,25 +126,25 @@ std::vector<Vec2d> computeEndpoints(Vec2d center, double theta, int len) {
 void* stickFunc(void *arg) {
 	StickController *sc = (StickController *)arg;
 
-	StickEKF sekf;
-	static const double _P0[] = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
-	Vector x(6);
-	x(1) = 700;
-	x(2) = 0.0;
-	x(3) = 400;
-	x(4) = 0.0;
-	x(5) = 3.14159 / 2.0;
-	x(6) = 0.0;
-
-	Matrix P0(6, 6, _P0);
-	sekf.init(x, P0);
-
-	cout << sekf.getX()(1) << endl;
+//	static const double _P0[] = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+//			0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+//			0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+//			0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+//			0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+//			0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+//	Vector x(6);
+//	x(1) = 700;
+//	x(2) = 0.0;
+//	x(3) = 400;
+//	x(4) = 0.0;
+//	x(5) = 3.14159 / 2.0;
+//	x(6) = 0.0;
+//
+//	Matrix P0(6, 6, _P0);
+//	sc->sekf.init(x, P0);
+//
+//	cout << sc->sekf.getX()(1) << endl;
+	sc->reset();
 
 	while (!sc->_end) {
 
@@ -208,17 +206,17 @@ void* stickFunc(void *arg) {
 		}
 
 		// kalman stuff
-		Vector u;
-		Vector v(3, 1);
+		KVector u;
+		KVector v(3, 1);
 		v(1) = sc->center[0];
 		v(2) = sc->center[1];
 		v(3) = sc->theta;
 
-		sekf.step(u, v);
-		cout << sekf.getX()(1) << " " << sekf.getX()(2) << endl;
+		sc->sekf.step(u, v);
+		cout << sc->sekf.getX()(1) << " " << sc->sekf.getX()(2) << endl;
 		cout << "sc pos: " << sc->center[0] << endl;
 
-		Vector X = sekf.getX();
+		KVector X = sc->sekf.getX();
 		sc->center[0] = X(1);
 		sc->center[1] = X(3);
 		sc->theta = X(5);
@@ -231,6 +229,16 @@ void* stickFunc(void *arg) {
         cout << "min cost = " << minCost << endl;
         sc->tracking = tracking && minCost > 0.05;
         sc->updateStickState();
+
+        if (!sc->tracking) {
+            sc->nonTrackingTime++;
+
+            if (sc->nonTrackingTime > 300) {
+                sc->reset();
+            }
+        } else {
+            sc->nonTrackingTime = 0;
+        }
 
 //		sc->theta += .0001;
 //		int numActivated = 0;
@@ -312,6 +320,35 @@ StickController::stop
 {
 	cout << "called stop\n\n\n\n\n\n";
     _end = true;
+}
+
+void StickController::reset() {
+    this->nonTrackingTime = 0;
+    this->theta = M_PI / 2.0;
+    this->p0[0] = 600;
+    this->p0[1] = 400;
+    this->p1[0] = 800;
+    this->p1[1] = 400;
+    this->tracking = false;
+    this->center[0] = 700;
+    this->center[1] = 400;
+
+    static const double _P0[] = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+    KVector x(6);
+    x(1) = 700;
+    x(2) = 0.0;
+    x(3) = 400;
+    x(4) = 0.0;
+    x(5) = 3.14159 / 2.0;
+    x(6) = 0.0;
+
+    KMatrix P0(6, 6, _P0);
+	this->sekf.init(x, P0);
 }
 
 StickController::~StickController(void)

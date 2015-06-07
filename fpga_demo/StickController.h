@@ -10,6 +10,7 @@
 
 #include "GridController.h"
 #include <queue>
+#include "StickEKF.h"
 
 class AudioPlayer;
 
@@ -24,24 +25,28 @@ class StickController
 {
 
 public:
-	StickController(GridController *gc, AudioPlayer * ap);
+	StickController(GridController *gc);
 	~StickController();
 	void start();
 	void stop();
 	void shuffle();
 	void updateStickState();
+	void reset();
 
 
     GridController * gc;
     AudioPlayer * _ap;
     bool _end;
 
+	StickEKF sekf;
     cv::Vec2d p0;
     cv::Vec2d p1;
     static const int len = 100;
     cv::Vec2d center;
     double theta;
     bool tracking;
+
+    long nonTrackingTime;
 
     std::vector<int>    _xrange;
     std::vector<int>    _yrange;
