@@ -72,61 +72,11 @@ GameAnnotator::draw_prompt_state
 )
 {
     cv::Scalar default_color(230.0, 160.0, 10.0, 255.0);
-    cv::Scalar occupied_color(0.0, 0.0, 255.0, 255.0);
-
-    // Draw the targets
-    int i = 0;
-    SquareIter end = _controller->_engagement_targets.end();
-    for (SquareIter iter = _controller->_engagement_targets.begin();
-         iter != end; ++iter)
-    {
-        GridSquare & square = *iter;
-
-        cv::Scalar color = (square.occupied)? occupied_color :
-                                              default_color;
-        // Draw square
-        draw_rect(img,
-                  square._x0,
-                  square._y0,
-                  square._w,
-                  square._h,
-                  1,
-                  color.val[2],   // R
-                  color.val[1],   // G
-                  color.val[0],   // B
-                  color.val[3]);  // alpha
-
-
-        // Draw the digit inside the square
-        std::stringstream ss;
-        ss << ++i;
-
-        int    base_line  = 0;
-        int    font_face  = CV_FONT_HERSHEY_PLAIN;
-        double font_scale = 2.0;
-        int    thickness  = 3;
-
-        cv::Size textSize = cv::getTextSize(ss.str(),
-                                            font_face,
-                                            font_scale,
-                                            thickness,
-                                            &base_line);
-
-        draw_text(img,
-                  square._x0 + square._w/2 - textSize.width/2,
-                  square._y0 + square._h/2 + textSize.height/2,
-                  ss.str(),
-                  font_face,
-                  font_scale,
-                  color,
-                  thickness,
-                  8);
-    }
 
     // Draw prompt message
     {
         std::stringstream ss;
-        ss << "Activate each square in the order listed!";
+        ss << "Try to spin the stick!";
 
         int    base_line  = 0;
         int    font_face  = CV_FONT_HERSHEY_PLAIN;
@@ -149,22 +99,6 @@ GameAnnotator::draw_prompt_state
                   thickness,
                   8);
     }
-
-    // Draw arrow
-    if (_controller->_avg_flow_vec_magnitude > 2.0f)
-    {
-        cv::Point p1(img->width/2, img->height/2);
-        int thickness = 5;
-        double scale = 30.0;
-
-        cv::Point p2(p1.x + _controller->_avg_flow_vec.x * scale,
-                     p1.y + _controller->_avg_flow_vec.y * scale);
-
-        draw_line(img,
-                  p1.x, p1.y, p2.x, p2.y,
-                  thickness,
-                  255, 255, 255, 255);
-    }
 }
 
 
@@ -177,7 +111,7 @@ GameAnnotator::draw_instruction_state
     // Draw text informing user that the game will start
     {
         std::stringstream ss;
-        ss << "Try to get the ball into the hoop as";
+        ss << "Try to spin the stick as many times";
 
         int        base_line  = 0;
         int        font_face  = CV_FONT_HERSHEY_PLAIN;
@@ -208,8 +142,7 @@ GameAnnotator::draw_instruction_state
                                             &base_line);
 
         ss.str("");
-        ss << "many times as you can in " << _controller->_recording_duration
-           << " seconds!";
+        ss << "as you can in " << _controller->_recording_duration << " seconds!";
 
         draw_text(img,
                   img->width/2 - textSize2.width/2,
@@ -400,21 +333,6 @@ GameAnnotator::draw_record_state
                   textColor,
                   thickness,
                   8);
-    }
-
-    // Draw hoop
-    {
-        cv::Scalar textColor(230.0, 160.0, 10.0, 255.0);
-
-        draw_circle(img,
-                    _controller->_hoop_center_x,
-                    _controller->_hoop_center_y,
-                    _controller->_hoop_radius,
-                    3, // thickness of line
-                    textColor[2],
-                    textColor[1],
-                    textColor[0],
-                    textColor[3]);
     }
 }
 

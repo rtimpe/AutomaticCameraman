@@ -13,13 +13,15 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
-#include "StickEKF.h"
 
 using std::cout;
 using std::endl;
 using cv::Vec2d;
 using std::vector;
 using std::queue;
+
+typedef StickEKF::Vector KVector;
+typedef StickEKF::Matrix KMatrix;
 
 StickController::StickController
 (
@@ -373,11 +375,17 @@ void StickController::updateStickState() {
     if (!tracking)
     {
         _stick_color = cv::Vec4d(0, 0, 255, 255);
+
+        std::queue<Snapshot> empty_q;
+        std::swap(_history_q, empty_q);
+        return;
     }
 
     // If atleast one second has gone by since last update, do update
     if (current_time_s != _last_update_time_s)
     {
+        int val = 0;
+
         while (0 != _history_q.size())
         {
             Snapshot snapshot = _history_q.front();
@@ -388,15 +396,21 @@ void StickController::updateStickState() {
             }
             else
             {
+
                 double angle_diff = abs(snapshot.angle - theta);
-                if (angle_diff > 2*PI)
+                if (angle_diff >= 2*PI)
                 {
                     // Completed 360 spin!
                     completed_spin = true;
                 }
+                else
+                {
+                    val = static_cast<int>(255.0 * (angle_diff / (2*PI)));
+                }
                 break;
             }
         }
+
 
         if(completed_spin)
         {
@@ -405,11 +419,14 @@ void StickController::updateStickState() {
             // If we compunsigned long long sec;leted a spin, clear history
             std::queue<Snapshot> empty_q;
             std::swap(_history_q, empty_q);
+
+            notifyListeners();
         }
         else
         {
-            _stick_color = cv::Vec4i(0, 255, 255, 255);
+            _stick_color = cv::Vec4i(val, 140, 255, 255);
         }
+
 
         // Add this snap shot of stick angle to the history queue
         Snapshot new_snapshot;
@@ -418,8 +435,31 @@ void StickController::updateStickState() {
         _history_q.push(new_snapshot);
         _last_update_time_s = current_time_s;
     }
-
-
 }
+
+void
+StickController::registerListener
+(
+    StickControllerListener * obj
+)
+{
+    _listeners.push_back(obj);
+}
+
+void
+StickController::notifyListeners
+(
+    void
+)
+{
+    std::vector<StickControllerListener *>::iterator end = _listeners.end();
+    std::vector<StickControllerListener *>::iterator iter;
+    for (iter = _listeners.begin(); iter != end; ++iter)
+    {
+        StickControllerListener * obj = *iter;
+        obj->handleSpinCompleted();
+    }
+}
+
 
 

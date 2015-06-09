@@ -9,6 +9,9 @@
 #include <cmath>
 #include <iostream>
 
+typedef StickEKF::Vector KVector;
+typedef StickEKF::Matrix KMatrix;
+
 StickEKF::StickEKF()
 {
 	setDim(6, 0, 3, 3, 3);

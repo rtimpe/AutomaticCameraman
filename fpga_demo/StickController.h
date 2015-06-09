@@ -12,12 +12,18 @@
 #include <queue>
 #include "StickEKF.h"
 
-class AudioPlayer;
 
 struct Snapshot
 {
     double             angle;
     unsigned long long sec;
+};
+
+
+_INTERFACE_ StickControllerListener
+{
+public:
+    virtual void handleSpinCompleted() = 0;
 };
 
 
@@ -32,10 +38,11 @@ public:
 	void shuffle();
 	void updateStickState();
 	void reset();
-
+    void registerListener(StickControllerListener * obj);
+    void notifyListeners(void);
 
     GridController * gc;
-    AudioPlayer * _ap;
+
     bool _end;
 
 	StickEKF sekf;
@@ -58,6 +65,7 @@ public:
     cv::Vec4i             _stick_color;
 
     std::queue<Snapshot>  _history_q;
+    std::vector<StickControllerListener *> _listeners;
 
 protected:
 	pthread_t _thread;    // Thread for tracking

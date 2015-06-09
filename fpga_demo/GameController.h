@@ -4,23 +4,23 @@
 #include "Public.h"
 #include "GridController.h"
 #include "StickController.h"
+#include "AudioPlayer.h"
 
-#define _INTERFACE_ class
-#define _IMPLEMENTS_ public
 
 class FramePool;
 class BallController;
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class GameController
+class GameController : _IMPLEMENTS_ StickControllerListener
 {
     friend class GameAnnotator;
 
 public:
 
-    enum EngagementState
+    enum GameState
     {
         PROMPT_STATE,
         INSTRUCTION_STATE,
@@ -44,7 +44,6 @@ public:
 	void stop(void);
 	void updateState(void);
 	double timeElapedInCurrentStateMS(void) const;
-	void resetEngagementTargets(void);
 
 	void doPromptState(void);
 	void doInstructionState(void);
@@ -52,6 +51,7 @@ public:
 	void doRecordState(void);
 	void doFeedbackState(void);
 	void doResetState(void);
+	virtual void handleSpinCompleted(void);
 
 
 	void           (*_toggleRecord)(void);  // function to toggle video recording
@@ -61,27 +61,22 @@ public:
 	int              _recording_duration;   // how many seconds to record
 	int              _instruction_duration; // how many seconds to keep instructions on screen
 	int              _countdown_duration;   // Number of seconds to coundown before starting
-    EngagementState  _current_state;        // current state in state machine
+    GameState  _current_state;        // current state in state machine
     bool             _current_state_done;   // true if we are done with this state
     bool             _end;                  // true if someone invokes stop() method
     FramePool *      _video_pool;           // the video pool for tracking
     int              _frame_num;
     bool             _is_first_frame;
     int              _first_frame_num;
-    int              _engaged_target_id;
     int              _current_score;
-    int              _hoop_center_x;
-    int              _hoop_center_y;
-    int              _hoop_radius;
 
     StickController *     _stick_controller;      // We need to know location of ball
     GridController *      _grid_controller;
 
-    std::vector<GridSquare>  _engagement_targets;      // grid of squares
-    std::vector<cv::Point2f> _prev_corners; // corners detected in previous frame
-    cv::Mat                  _prev_sub_img; // previous window
-    cv::Point2f              _avg_flow_vec; // the average of the vectors from optical flow
-    float                    _avg_flow_vec_magnitude; // magnitude of _avg_flow_vec
+    std::string           _spin_wav_file_path;
+    WavHandle *           _spin_wav_handle;
+    AudioPlayer *         _audio_player;
+
 protected:
 
 	double          _state_start_time;     // Time we started current state

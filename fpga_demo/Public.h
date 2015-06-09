@@ -103,6 +103,9 @@ static CvRNG rng_state = cvRNG(1);
 	#define TIMEMS(t)
 #endif
 
+#define _INTERFACE_ class
+#define _IMPLEMENTS_ public
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // random generator stuff
 void				randinitalize( const int init );

@@ -10,7 +10,6 @@
 #include "GameAnnotator.h"
 #include "DebugLogger.h"
 #include "FrameSaver.h"
-//#include "AudioPlayer.h"
 #include "StickController.h"
 #include <riffa.h>
 #include <execinfo.h>
@@ -159,7 +158,7 @@ main
 														  shortAlpha,
 														  longAlpha,
 														  diff);
-//    AudioPlayer * audio_player = new AudioPlayer();
+
     StickController * stickController = new StickController(grid_controller);
 
 //    BallController * ballController = new BallController(grid_controller, video->_width, video->_height, 30);
@@ -173,11 +172,12 @@ main
 
     //-----------------------------------------------------------------
     // Create game controller
+
     GameController * game_controller =
         new GameController(toggle_record,
                            video->_width,
                            video->_height,
-                           30,
+                           60,
                            videoPool,
                            stickController,
                            grid_controller);

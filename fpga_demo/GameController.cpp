@@ -14,7 +14,7 @@ static ofstream out_file;
 
 
 //*****************************************************************************
-// EngagementController methods
+// GameController methods
 //*****************************************************************************
 GameController::GameController
 (
@@ -22,28 +22,25 @@ GameController::GameController
     int                   img_w,
     int                   img_h,
     int                   recording_duration,
-	FramePool *           video_pool,
+    FramePool *           video_pool,
     StickController *     stick_controller,
-	GridController *      grid_controller
+    GridController *      grid_controller
 )
 : _toggleRecord(toggleRecord),
   _recording_started(false),
   _img_w(img_w), _img_h(img_h), _recording_duration(recording_duration),
-  _instruction_duration(5), _countdown_duration(3),
+  _instruction_duration(4), _countdown_duration(3),
   _current_state(PROMPT_STATE), _current_state_done(false), _end(false),
   _video_pool(video_pool),
   _frame_num(0), _is_first_frame(true), _first_frame_num(0),
-  _engaged_target_id(0), _current_score(0),
-  _hoop_center_x(img_w/2), _hoop_center_y(60), _hoop_radius(80),
-  _stick_controller(stick_controller), _grid_controller(grid_controller)
+  _current_score(0),
+  _stick_controller(stick_controller), _grid_controller(grid_controller),
+  _spin_wav_file_path("assets/tone.wav"), _spin_wav_handle(0),
+  _audio_player(new AudioPlayer())
 {
     _state_start_time = get_current_time_ms();
-
-    // Create targets
-    //_targets.push_back(GridSquare(400, 400, 72, 72));
-    _engagement_targets.push_back(GridSquare(100, 100, 50, 50));
-    _engagement_targets.push_back(GridSquare(1000, 100, 50, 50));
-    _engagement_targets.push_back(GridSquare(100, 650, 50, 50));
+    _spin_wav_handle = _audio_player->loadWav(_spin_wav_file_path);
+    _stick_controller->registerListener(this);
 }
 
 
@@ -53,7 +50,7 @@ GameController::start
     void
 )
 {
-	pthread_create(&_thread, NULL, controller_function, this);
+    pthread_create(&_thread, NULL, controller_function, this);
 }
 
 
@@ -87,15 +84,15 @@ GameController::updateState
         case COUNTDOWN_STATE:
             _current_state = RECORD_STATE;
 
-            _grid_controller->start();
-            _stick_controller->start();
+            //_grid_controller->start();
+            //_stick_controller->start();
             _current_score = 0;
             break;
         case RECORD_STATE:
             _current_state = FEEDBACK_STATE;
 
-            _stick_controller->stop();
-            _grid_controller->stop();
+            //_stick_controller->stop();
+            //_grid_controller->stop();
             break;
         case FEEDBACK_STATE:
             _current_state = RESET_STATE;
@@ -104,7 +101,6 @@ GameController::updateState
             _current_state = PROMPT_STATE;
 
             _is_first_frame = true;
-            resetEngagementTargets();
 
 //            _grid_controller->reset();
         }
@@ -136,277 +132,12 @@ GameController::~GameController
 
 
 void
-GameController::resetEngagementTargets
-(
-    void
-)
-{
-//    SquareIter end = _engagement_targets.end();
-//    for (SquareIter it = _engagement_targets.begin();
-//         end != it; ++it)
-//    {
-//        GridSquare & gs = *it;
-//        gs.reset();
-//    }
-//    _engaged_target_id = 0;
-}
-
-
-#if 0
-void
 GameController::doPromptState
 (
     void
 )
 {
-    Frame * frame = NULL;
-
-    _video_pool->acquire(&frame, _frame_num, false, true);
-
-    cv::Mat img(frame->_bgr);
-
-    SquareIter end = _engagement_targets.end();
-    for (SquareIter it = _engagement_targets.begin();
-         end != it; ++it)
-    {
-        GridSquare & gs = *it;
-
-        //-------------------------------------------------------------
-        // Get greyscale image of window
-        cv::Mat sub_img = img(cv::Range(gs._x0, gs._x0 + gs._w),
-                              cv::Range(gs._y0, gs._y0 + gs._h));
-        cv::Mat grey_sub_img;
-        cv::cvtColor(sub_img,
-                     grey_sub_img,
-                     cv::COLOR_BGR2GRAY);
-
-        //cout << "source type is " << grey_sub_img.type() << endl;
-
-
-
-        //-------------------------------------------------------------
-        // Compute optical flow
-        vector<cv::Point2f> next_corners;
-        vector<unsigned char> status;
-        vector<float> errs;
-
-        if (!_prev_corners.empty())
-        {
-            cv::calcOpticalFlowPyrLK(_prev_sub_img,
-                                     grey_sub_img,
-                                     _prev_corners,
-                                     next_corners,
-                                     status,
-                                     errs);
-        }
-
-        //-------------------------------------------------------------
-        // Get vectors
-
-        cv::Point2f avg_vec(0.f, 0.f);
-        int count = 0;
-        _avg_flow_vec = avg_vec; // reset
-
-        for (unsigned int i = 0; i < status.size(); ++i)
-        {
-            if (status[i])
-            {
-                float error = MIN(errs[i], 100.0f);
-                float coef  = (100.f - error)*(100.f - error)*0.0001;
-
-                cv::Point2f & t0 = _prev_corners[i];
-                cv::Point2f & t1 = next_corners[i];
-                cv::Point2f delta = coef*(t1 - t0);
-
-                avg_vec = avg_vec + delta;
-
-                ++count;
-            }
-        }
-
-        float magnitude = 0.f;
-
-        if (count > 0)
-        {
-            avg_vec.x = avg_vec.x / count;
-            avg_vec.y = avg_vec.y / count;
-            magnitude = sqrtf(avg_vec.x*avg_vec.x + avg_vec.y*avg_vec.y);
-
-            _avg_flow_vec = avg_vec;
-            _avg_flow_vec_magnitude = magnitude;
-        }
-
-        if (magnitude > 1.8)
-        {
-            cout << "magnitude is " << magnitude << endl;
-            cout << "Avg vec is [" << avg_vec.x << "," << avg_vec.y << "]" <<endl;
-        }
-
-        out_file << avg_vec.x << "," << avg_vec.y << endl;
-
-        //-------------------------------------------------------------
-        // Get features for the current frame
-        vector<cv::Point2f> corners;
-        cv::goodFeaturesToTrack(grey_sub_img,   // input image
-                                corners,        // output
-                                16,             // max corners
-                                0.1,            // quality level
-                                1.0);
-        //cout << "Num features detected is " << corners.size() << endl;
-
-        // Update previous frame (for the next iteration)
-        grey_sub_img.copyTo(_prev_sub_img);
-        _prev_corners = corners;
-    }
-
-    ++_frame_num;
-
-    _video_pool->release(frame);
 }
-
-#else
-
-void
-GameController::doPromptState
-(
-    void
-)
-{
-    Frame * frame = NULL;
-
-    int new_frame_num = _video_pool->acquire(&frame,
-                                             _frame_num,
-                                             false,
-                                             true);
-
-    if (NULL == frame || new_frame_num <= _frame_num)
-    {
-        return;
-    }
-
-    _frame_num = new_frame_num;
-
-    cv::Mat img(frame->_bgr);
-
-    int target_id = 0;
-
-    SquareIter end = _engagement_targets.end();
-    for (SquareIter it = _engagement_targets.begin();
-         end != it; ++it)
-    {
-        GridSquare & gs = *it;
-        ++target_id;
-
-        //-------------------------------------------------------------
-        // Compute the RGB averages for each of the target squares
-        double averageR = 0.0;
-        double averageG = 0.0;
-        double averageB = 0.0;
-
-        for (int j = gs._x0; j < gs._x0 + gs._w; ++j)
-        {
-            for (int k = gs._y0; k < gs._y0 + gs._h; ++k)
-            {
-                cv::Vec3b pixel = img.at<cv::Vec3b>(k, j);
-                averageB += pixel[0];
-                averageG += pixel[1];
-                averageR += pixel[2];
-            }
-        }
-        averageR /= (double) (gs._w * gs._h);
-        averageG /= (double) (gs._w * gs._h);
-        averageB /= (double) (gs._w * gs._h);
-
-        if (_is_first_frame)
-        {
-            gs.runningMeanB = averageB;
-            gs.runningMeanR = averageR;
-            gs.runningMeanG = averageG;
-            gs.meanShortB = averageB;
-            gs.meanShortR = averageR;
-            gs.meanShortG = averageG;
-            gs.runningMeanSquaredB = averageB * averageB;
-            gs.runningMeanSquaredR = averageR * averageR;
-            gs.runningMeanSquaredG = averageG * averageG;
-
-            _is_first_frame = false;
-            _first_frame_num = _frame_num;
-        }
-        else
-        {
-            if (!gs.occupied) {
-                double alpha = _grid_controller->longAlpha;
-                gs.runningMeanR = (1.0 - alpha) * gs.runningMeanR + alpha * averageR;
-                gs.runningMeanSquaredR = (1.0 - alpha) * gs.runningMeanSquaredR + alpha * averageR * averageR;
-                gs.runningMeanG = (1.0 - alpha) * gs.runningMeanG + alpha * averageG;
-                gs.runningMeanSquaredG = (1.0 - alpha) * gs.runningMeanSquaredG + alpha * averageG * averageG;
-                gs.runningMeanB = (1.0 - alpha) * gs.runningMeanB + alpha * averageB;
-                gs.runningMeanSquaredB = (1.0 - alpha) * gs.runningMeanSquaredB + alpha * averageB * averageB;
-            }
-
-            cout << "meanShortB=" << gs.meanShortB << endl;
-
-            double smallAlpha = _grid_controller->shortAlpha;
-            gs.meanShortB = (1.0 - smallAlpha) * gs.meanShortB + smallAlpha * averageB;
-            gs.meanShortG = (1.0 - smallAlpha) * gs.meanShortG + smallAlpha * averageG;
-            gs.meanShortR = (1.0 - smallAlpha) * gs.meanShortR + smallAlpha * averageR;
-
-            double stdR = std::sqrt(gs.runningMeanSquaredR - gs.runningMeanR * gs.runningMeanR);
-            double stdG = std::sqrt(gs.runningMeanSquaredG - gs.runningMeanG * gs.runningMeanG);
-            double stdB = std::sqrt(gs.runningMeanSquaredB - gs.runningMeanB * gs.runningMeanB);
-
-            double diffR = std::abs(gs.meanShortR - gs.runningMeanR);
-            double diffG = std::abs(gs.meanShortG - gs.runningMeanG);
-            double diffB = std::abs(gs.meanShortB - gs.runningMeanB);
-
-            double diff = _grid_controller->diff;
-
-            if (_frame_num > 200 + _first_frame_num) {
-                cout << "diffR=" << diffR << ", diff*stdR=" << diff*stdR << endl;
-                if (diffR > diff * stdR || diffG > diff * stdG || diffB > diff * stdB) {
-                    gs.occupied = true;
-
-                    if (target_id == _engaged_target_id ||
-                        target_id == _engaged_target_id + 1)
-                    {
-                        gs.occupied = true;
-                        _engaged_target_id = target_id;
-                    }
-                    else
-                    {
-                        _engaged_target_id = 0;
-                    }
-
-                } else {
-                    //gs.occupied = false;
-                }
-            }
-        }
-    }
-
-
-    if (0 == _engaged_target_id)
-    {
-        SquareIter end = _engagement_targets.end();
-        for (SquareIter it = _engagement_targets.begin();
-             end != it; ++it)
-        {
-            GridSquare & gs = *it;
-            gs.occupied = false;
-        }
-    }
-
-
-    _video_pool->release(frame);
-
-    //cout << "target id is now " << _engaged_target_id << endl;
-    if (3 == _engaged_target_id)
-    {
-        cout << "State is done!" << endl;
-        _current_state_done = true;
-    }
-}
-#endif
 
 
 void
@@ -444,13 +175,6 @@ GameController::doRecordState
         _recording_started = true;
     }
 
-//    // Update Score if the ball is inside the hoop
-//    float xdiff = static_cast<float>(_hoop_center_x - _ball_controller->xPos);
-//    float ydiff = static_cast<float>(_hoop_center_y - _ball_controller->yPos);
-//    float distance = sqrtf(xdiff*xdiff + ydiff*ydiff);
-//    if (distance <= static_cast<float>(_hoop_radius))
-//        ++_current_score;
-
     double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
     _current_state_done = time_elapsed > _recording_duration;
 
@@ -483,6 +207,26 @@ GameController::doResetState
     double time_elapsed = 0.001 * timeElapedInCurrentStateMS();
     _current_state_done = time_elapsed > 6.0;
 }
+
+
+void
+GameController::handleSpinCompleted
+(
+    void
+)
+{
+    if (PROMPT_STATE == _current_state)
+    {
+        _current_state_done = true;
+    } 
+    else if (RECORD_STATE == _current_state)
+    {
+        ++_current_score;
+    }
+
+    //_audio_player->playWav(_spin_wav_handle);
+}
+
 
 
 //*****************************************************************************
@@ -537,6 +281,7 @@ controller_function
 
     return NULL;
 }
+
 
 
 
