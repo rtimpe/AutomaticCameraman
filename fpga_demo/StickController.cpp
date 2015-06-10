@@ -155,7 +155,7 @@ void* stickFunc(void *arg) {
 			GridSquare &gs = sc->gc->_squares[i];
 
 			Vec2d p(gs._x0, gs._y0);
-			if (cv::norm(sc->center - p) < 300) {
+			if (cv::norm(sc->center - p) < sc->proximity) {
 				closeSquares.push_back(gs);
 			}
 		}

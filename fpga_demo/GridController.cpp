@@ -146,7 +146,7 @@ void* trackerFunc(void *arg) {
 					}
 				}
 
-				if (gs.timeOccupied >= 400) {
+				if (gs.timeOccupied >= 150) {
 					gs.occupied = false;
 					gs.timeOccupied = -500;
 				}

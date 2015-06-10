@@ -31,11 +31,15 @@ GridAnnotator::draw_long_term
         if (square.timeOccupied < 0) {
         	continue;
         }
-        if (square.occupied) {
+
+        cv::Vec2d p(square._x0, square._y0);
+        double dist = cv::norm(p - stickController->center);
+        if (square.occupied && dist < stickController->proximity) {
         	draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 255, 0, 0, 255);
-        } else {
-        	draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 0, 255, 0, 255);
         }
+//        else {
+//        	draw_rect(img, square._x0, square._y0, square._w, square._h, 1, 0, 255, 0, 255);
+//        }
 
     }
 
