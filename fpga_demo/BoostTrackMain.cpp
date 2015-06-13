@@ -110,17 +110,6 @@ main
     debug_logger->start();
 
     //-----------------------------------------------------------------
-    // Open the FPGA for capture
-    int fpgaIdCapture = 0; // for now assume FPGA0 is capture FPGA
-    fpga_t *fpgaCapture;
-    fpgaCapture = fpga_open(fpgaIdCapture);
-
-    if (fpgaCapture == NULL) {
-        printf("ERROR: Could not open FPGA %d.\n", fpgaIdCapture);
-        return -1;
-    }
-
-    //-----------------------------------------------------------------
     // Create the FramePools
 
     // Make video pool size large enough to store the last 30 seconds
@@ -249,8 +238,6 @@ main
     //ballController->stop();
     //grid_controller->stop();
 
-    // Close the FPGA
-    fpga_close(fpgaCapture);
 
     // Stop logs
     debug_logger->stop();
