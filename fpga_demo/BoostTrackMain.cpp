@@ -17,13 +17,16 @@
 #include <sys/stat.h>
 #include <cstdlib>
 #include <algorithm>
+#include "DeckLinkAPI.h"
+#include "DeckLinkCaptureDelegate.h"
 
 
 // Forward declarations for functions
 void handle_stop(void);
 void toggle_record(void);
-void runtime_logic(FrameAnnotator * annotator,
-                   VideoImages *    video,
+void runtime_logic(int width,
+                   int height,
+                   FrameAnnotator * annotator,
                    FramePool *      videoPool,
                    GridController * grid_controller,
 				   StickController * stickController,
@@ -51,6 +54,39 @@ static FrameSaver * frame_saver = 0;
 
 
 int myrandom(int i) { return std::rand() % i;};
+
+void cameraStuff(FramePool *videoPool) {
+    IDeckLink* deckLink = NULL;
+    IDeckLinkIterator* deckLinkIterator = CreateDeckLinkIteratorInstance();
+    HRESULT result;
+    IDeckLinkDisplayMode* displayMode;
+    IDeckLinkInput*  g_deckLinkInput = NULL;
+
+    result = deckLinkIterator->Next(&deckLink);
+
+    if (result != S_OK || deckLink == NULL)
+    {
+        fprintf(stderr, "Unable to get DeckLink device\n");
+        return;
+    }
+
+    result = deckLink->QueryInterface(IID_IDeckLinkInput, (void**)&g_deckLinkInput);
+    if (result != S_OK) {
+        cout << "error" << end;
+        return;
+    }
+
+    g_deckLinkInput->EnableVideoInput(bmdModeHD720p5994, bmdFormat8BitBGRA, 0);
+
+    DeckLinkCaptureDelegate * delegate = new DeckLinkCaptureDelegate(videoPool, 1280, 720);
+    g_deckLinkInput->SetCallback(delegate);
+
+    result = g_deckLinkInput->StartStreams();
+    if (result != S_OK) {
+        cout << result;
+        cout << "fail starting streams\n";
+    }
+}
 
 //*****************************************************************************
 // * main
@@ -108,22 +144,27 @@ main
     // Create the VideoImages source
     //VideoImages *video = new DiskImages(prefix, stem, startFrame, endFrame, 
     //                                    frameW, frameH, 30, videoPool);
-    VideoImages *video = new LiveImages(fpgaCapture,
-                                        0,
-                                        7000,
-                                        1280,
-                                        720,
-                                        60,
-                                        videoPool);
-    if (!video->init()) {
-        printf("ERROR: Could not initialize the VideoImages.\n");
-        return -1;
-    }
+//    VideoImages *video = new LiveImages(fpgaCapture,
+//                                        0,
+//                                        7000,
+//                                        1280,
+//                                        720,
+//                                        60,
+//                                        videoPool);
+
+    int height = 720;
+    int width = 1280;
+    cameraStuff(videoPool);
+
+//    if (!video->init()) {
+//        printf("ERROR: Could not initialize the VideoImages.\n");
+//        return -1;
+//    }
 
     //-----------------------------------------------------------------
     // Create the FrameAnnotator
-    FrameAnnotator *annotator = new FrameAnnotator(video->_width,
-                                                   video->_height,
+    FrameAnnotator *annotator = new FrameAnnotator(width,
+                                                   height,
                                                    NULL,
                                                    annotationPool);
     if (!annotator->init()) {
@@ -134,8 +175,8 @@ main
     //-----------------------------------------------------------------
     // Create the FrameDisplayer
     FrameDisplayer *displayer = new FrameDisplayer(DISPLAYER_TITLE,
-                                                   video->_width,
-                                                   video->_height,
+                                                   width,
+                                                   height,
                                                    videoPool,
                                                    annotationPool,
                                                    handle_stop,
@@ -152,8 +193,8 @@ main
                                                           10,
                                                           10,
                                                           8,
-                                                          video->_width,
-                                                          video->_height,
+                                                          width,
+                                                          height,
                                                           videoPool,
 														  shortAlpha,
 														  longAlpha,
@@ -167,7 +208,7 @@ main
 
     //-----------------------------------------------------------------
     // Start the various threads
-    video->start();
+//    video->start();
     displayer->start();
 
     //-----------------------------------------------------------------
@@ -175,8 +216,8 @@ main
 
     GameController * game_controller =
         new GameController(toggle_record,
-                           video->_width,
-                           video->_height,
+                           width,
+                           height,
                            60,
                            videoPool,
                            stickController,
@@ -185,8 +226,9 @@ main
 
 	//-----------------------------------------------------------------
 	// Enter runtime logic
-	runtime_logic(annotator,
-	              video,
+	runtime_logic(width,
+	              height,
+	              annotator,
 	              videoPool,
 	              grid_controller,
 				  stickController,
@@ -200,7 +242,7 @@ main
 
     // Stop the various threads (annotator last)
     displayer->stop();
-    video->stop();
+//    video->stop();
 
     annotator->stop();
     game_controller->stop();
@@ -224,8 +266,9 @@ main
 void
 runtime_logic
 (
+    int width,
+    int height,
     FrameAnnotator * annotator,
-    VideoImages *    video,
     FramePool *      videoPool,
     GridController * grid_controller,
 	StickController * stickController,
@@ -247,10 +290,10 @@ runtime_logic
 
     //-----------------------------------------------------------------
     // Convert the frame to gray scale
-    IplImage *gray = cvCreateImage(cvSize(video->_width, video->_height), IPL_DEPTH_8U, 1);
+    IplImage *gray = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
     IppiSize roi;
-    roi.width = video->_width;
-    roi.height = video->_height;
+    roi.width = width;
+    roi.height = height;
     ippiRGBToGray_8u_C3C1R((Ipp8u*)frame->_bgr->imageData,
                            frame->_bgr->width*3,
                            (Ipp8u*)gray->imageData,

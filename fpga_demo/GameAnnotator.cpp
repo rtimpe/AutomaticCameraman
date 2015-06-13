@@ -98,6 +98,18 @@ GameAnnotator::draw_prompt_state
                   default_color,
                   thickness,
                   8);
+
+        std::stringstream note;
+        note << "Note: this will start recording";
+        draw_text(img,
+                img->width/2 - textSize.width/2,
+                (int)img->height * .75,
+                note.str(),
+                font_face,
+                font_scale,
+                default_color,
+                thickness,
+                8);
     }
 }
 
