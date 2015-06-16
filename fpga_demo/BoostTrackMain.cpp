@@ -123,8 +123,8 @@ main
     //-----------------------------------------------------------------
 	// Create Frame saver for saving video or for dumping the last n frames
 	// upon program termination
-	FrameSaver * frame_saver = new FrameSaver(0,
-	                                          false);
+	frame_saver = new FrameSaver(0,
+	                             false);
     frame_saver->SetBGPool(videoPool);
     frame_saver->SetFGPool(annotationPool);
     frame_saver->start();

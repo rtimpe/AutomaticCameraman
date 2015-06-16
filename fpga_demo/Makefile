@@ -3,8 +3,8 @@ program_C_SRCS := $(wildcard *.c)
 program_CXX_SRCS := $(wildcard *.cpp)
 program_C_OBJS := ${program_C_SRCS:.c=.o}
 program_CXX_OBJS := ${program_CXX_SRCS:.cpp=.o}
-program_OBJS := $(program_C_OBJS) $(program_CXX_OBJS) ~/blackmagic/Blackmagic\ DeckLink\ SDK\ 10.4.1/Linux/include/DeckLinkAPIDispatch.cpp
-program_INCLUDE_DIRS := /opt/intel/ipp/include /usr/include/SDL
+program_OBJS := $(program_C_OBJS) $(program_CXX_OBJS) /home/mattj/blackmagic/blackmagic_declink_sdk_10_4_1/Linux/include/DeckLinkAPIDispatch.cpp
+program_INCLUDE_DIRS := /opt/intel/ipp/include /usr/include/SDL /home/mattj/blackmagic/blackmagic_declink_sdk_10_4_1/Linux/include
 program_LIBRARY_DIRS :=
 program_LIBRARIES := opencv_core opencv_highgui opencv_imgproc opencv_objdetect opencv_video ippi ippcv ippcc gd png z jpeg freetype m pthread riffa glut GL GLU GLEW SDL_mixer
 #CPPFLAGS += -DDTIME -g -ffast-math -mfpmath=387 -march=core2

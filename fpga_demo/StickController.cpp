@@ -215,8 +215,8 @@ void* stickFunc(void *arg) {
 		v(3) = sc->theta;
 
 		sc->sekf.step(u, v);
-		cout << sc->sekf.getX()(1) << " " << sc->sekf.getX()(2) << endl;
-		cout << "sc pos: " << sc->center[0] << endl;
+		//cout << sc->sekf.getX()(1) << " " << sc->sekf.getX()(2) << endl;
+		//cout << "sc pos: " << sc->center[0] << endl;
 
 		KVector X = sc->sekf.getX();
 		sc->center[0] = X(1);
@@ -228,7 +228,7 @@ void* stickFunc(void *arg) {
 		sc->p1 = pts[1];
 
         // If cost meets threshold, the stick is activated
-        cout << "min cost = " << minCost << endl;
+        //cout << "min cost = " << minCost << endl;
         sc->tracking = tracking && minCost > 0.05;
         sc->updateStickState();
 
@@ -370,7 +370,7 @@ void StickController::updateStickState() {
     // Get current time in seconds
     bool completed_spin = false;
     unsigned long long current_time_s = get_current_time_s_ll();
-    cout << "current_time_s is " << current_time_s << endl;
+    //cout << "current_time_s is " << current_time_s << endl;
 
     if (!tracking)
     {

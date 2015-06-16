@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 
+#define DEBUG_PRINT_ENABLED 0
+
 using std::cout;
 using std::endl;
 

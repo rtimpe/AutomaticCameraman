@@ -69,12 +69,12 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame
     {
         if (videoFrame->GetFlags() & bmdFrameHasNoInputSource)
         {
-            printf("Frame received - No input signal detected\n");
+            //printf("Frame received - No input signal detected\n");
         }
         else
         {
-            printf("Frame received - Valid Frame - Size: %li bytes\n",
-                videoFrame->GetRowBytes() * videoFrame->GetHeight());
+            //printf("Frame received - Valid Frame - Size: %li bytes\n",
+            //    videoFrame->GetRowBytes() * videoFrame->GetHeight());
 
             frame = videoPool->update_next(frame, frameNum++, false);
 
