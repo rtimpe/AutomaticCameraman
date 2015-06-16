@@ -132,7 +132,7 @@ void *displayer_fxn(void *arg) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(fd->_width, fd->_height);
 	fd->_window = glutCreateWindow(fd->_title);
-	//glutFullScreen();
+	glutFullScreen();
 
 	// Initialize OpenGL
 	glClearColor (0.0, 0.0, 0.0, 0.0);
