@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #ifndef DYNAMICS_TRACKER_PUBLIC
 #define DYNAMICS_TRACKER_PUBLIC
 
@@ -33,3 +34,4 @@ public:
 
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

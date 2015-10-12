@@ -153,13 +153,22 @@ template<> void					Matrixu::GrayIplImage2Matrix(IplImage *img)
 	bool origin = img->origin==1;
 
 	if( _depth == 1 )
+    {
 		for( int row=0; row<_rows; row++ )
+        {
 			for( int k=0; k<_cols; k++ )
+            {
 				if( origin )
+                {
 					((Ipp8u*)_data[0])[(_rows - row - 1)*_dataStep+k] = img->imageData[row*img->widthStep+k];
+                }
 				else
+                {
 					((Ipp8u*)_data[0])[row*_dataStep+k] = img->imageData[row*img->widthStep+k];
-
+                }
+            }
+        }
+    }
 }
 
 template<> void					Matrixu::display(int fignum, float p)

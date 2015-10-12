@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #include "LibraryTracker.h"
 
 
@@ -221,3 +222,4 @@ printf("deleting detector %d\n", _numTrackers);
 }
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

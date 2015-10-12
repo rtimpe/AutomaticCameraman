@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #ifndef LIBRARY_TRACKER_PUBLIC
 #define LIBRARY_TRACKER_PUBLIC
 
@@ -29,3 +30,4 @@ public:
 
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

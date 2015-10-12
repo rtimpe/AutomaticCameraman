@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #include "BgSubTracker.h"
 
 
@@ -79,3 +80,4 @@ bool BgSubTracker::new_location(Cluster *cluster, IplImage *gray, IplImage *disp
 }
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

@@ -7,7 +7,10 @@
 #ifndef H_PUBLIC
 #define H_PUBLIC
 
+#if !defined(CLOCKS_PER_SEC)
 #define CLOCKS_PER_SEC (2.6 * 1000000000)
+#endif 
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
@@ -45,7 +48,7 @@
 #pragma comment(lib,"cxts.lib")
 
 
-#include "omp.h"
+//#include "omp.h"
 #include "timer.h"
 
 using namespace std;

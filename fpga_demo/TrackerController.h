@@ -1,3 +1,5 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
+
 #ifndef TRACKER_CONTROLLER_PUBLIC
 #define TRACKER_CONTROLLER_PUBLIC
 
@@ -45,3 +47,4 @@ public:
 
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

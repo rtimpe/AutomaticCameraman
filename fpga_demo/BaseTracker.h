@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #ifndef BASE_TRACKER_PUBLIC
 #define BASE_TRACKER_PUBLIC
 
@@ -30,4 +31,4 @@ public:
 #endif
 
 
-
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

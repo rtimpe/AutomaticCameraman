@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #ifndef META_TRACKER_PUBLIC
 #define META_TRACKER_PUBLIC
 
@@ -46,3 +47,4 @@ public:
 
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

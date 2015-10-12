@@ -8,6 +8,7 @@ TC_INIT(liveimages, 2);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void *capturer_fxn(void *arg) {
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 	LiveImages *li = (LiveImages *)arg;
 	Frame *frame = NULL;
 	int recvd;
@@ -37,7 +38,7 @@ TC_ACCRUE(liveimages, 0, 1, 0);
 	}
 
 printf("liveimages: %f (%ld)\n", TC_ITER_AVG(liveimages, 0),  TC_ITERS(liveimages, 0));
-
+#endif // COMMENTED_OUT_FOR_MAC_BUILD
 	return NULL;
 }
 

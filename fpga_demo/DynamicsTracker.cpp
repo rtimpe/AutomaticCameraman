@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #include "DynamicsTracker.h"
 
 
@@ -64,3 +65,4 @@ bool DynamicsTracker::new_location(Cluster *cluster, IplImage *gray, IplImage *d
 
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

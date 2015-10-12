@@ -61,6 +61,7 @@ TS_STAMP(annotator, 0);
 		// Update the pool
 		frame = fa->_pool->update_next(frame, c, false);
 
+#if 0 // MAY_REMOVE
 		if (NULL != fa->_controller)
 		{
 		    // Wait for changes
@@ -68,6 +69,7 @@ TS_STAMP(annotator, 0);
 		    if (fa->_lastTracked < 0)
 			    break;
 		}
+#endif
 
 		// Clear the long term image (if necessary)
 		if (clear)

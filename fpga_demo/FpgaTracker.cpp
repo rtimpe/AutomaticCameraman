@@ -1,3 +1,5 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
+
 #include "FpgaTracker.h"
 #include "timer.h"
 #include <string.h>
@@ -558,3 +560,4 @@ void FpgaTracker::stop() {
 	pthread_cond_destroy(&_cv_recv);
 }
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

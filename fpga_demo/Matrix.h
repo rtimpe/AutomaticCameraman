@@ -253,9 +253,6 @@ template<class T> Matrix<T>			Matrix<T>::Eye( int sz )
 }
 template<class T> void				Matrix<T>::Resize(uint rows, uint cols, uint depth) 
 {
-	if( rows<0 || cols<0 )
-		abortError(__LINE__, __FILE__,"NEGATIVE MATRIX SIZE");
-
 	if( _rows == rows && _cols == cols && _depth == depth ) return;
 	bool err = false;
 	Free();
@@ -324,13 +321,17 @@ template<class T> void				Matrix<T>::Free()
 	_ii_init = false;
 
 	for( uint k=0;  k<_data.size(); k++ )
+    {
 		if( _data[k] != NULL )
+        {
 			if( typeid(T) == typeid(uchar) ){
 				ippiFree((Ipp8u*)_data[k]);
 			}
 			else{
 				ippiFree((Ipp32f*)_data[k]);
 			}
+        }
+    }
 
 	_rows = 0;
 	_cols = 0;

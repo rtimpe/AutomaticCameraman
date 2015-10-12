@@ -11,7 +11,7 @@
 #include "DebugLogger.h"
 #include "FrameSaver.h"
 #include "StickController.h"
-#include <riffa.h>
+//#include <riffa.h>
 #include <execinfo.h>
 #include <signal.h>
 #include <sys/stat.h>
@@ -34,7 +34,7 @@ void runtime_logic(int width,
 
 
 // Global variables
-int end = 0;
+int End = 0;
 static char DISPLAYER_TITLE[] = "Capture Video";
 char prefix[] = "../../milboosttracker-master/sylv/imgs/";
 char stem[] = "%simg%05d.png";
@@ -72,7 +72,7 @@ void cameraStuff(FramePool *videoPool) {
 
     result = deckLink->QueryInterface(IID_IDeckLinkInput, (void**)&g_deckLinkInput);
     if (result != S_OK) {
-        cout << "error" << end;
+        cout << "error" << End;
         return;
     }
 
@@ -99,6 +99,9 @@ main
 )
 {
     randinitalize(0);
+
+    printf("Hello!\n");
+    return 0;
 
     double shortAlpha = atof(argv[1]);
     double longAlpha = atof(argv[2]);
@@ -306,7 +309,7 @@ runtime_logic
     stickController->start();
 
     // Just wait for the end
-    while (end == 0)
+    while (End == 0)
         usleep(30*1000);
 }
 
@@ -317,7 +320,7 @@ runtime_logic
 void
 handle_stop()
 {
-    end = 1;
+    End = 1;
 }
 
 //*****************************************************************************

@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #ifndef FPGA_TRACKER_PUBLIC
 #define FPGA_TRACKER_PUBLIC
 
@@ -63,4 +64,4 @@ public:
 #endif
 
 
-
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

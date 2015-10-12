@@ -24,6 +24,8 @@ GameAnnotator::draw_long_term
     if (GameController::RECORD_STATE == _controller->_current_state) {
         _grid_annotator->draw_long_term(img);
     }
+
+    return true;
 }
 
 

@@ -4,10 +4,9 @@
 #include "Public.h"
 #include "FramePool.h"
 #include "Annotator.h"
-#include "TrackerController.h"
 #include <pthread.h>
 
-
+class TrackerController;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FrameAnnotator

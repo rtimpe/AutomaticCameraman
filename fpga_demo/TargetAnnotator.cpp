@@ -55,8 +55,10 @@ bool TargetAnnotator::draw_long_term(IplImage *img) {
 
 
 void TargetAnnotator::draw_short_term(IplImage *img) {
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 	// Draw a point representing the predicted location
 	draw_rect(img, _controller->_x, _controller->_y, 4, 4, 4, 0, 0, 255, 255);
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 }		
 
 

@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #include "TrackerController.h"
 #include "Tracker.h"
 #include "FpgaTracker.h"
@@ -266,3 +267,4 @@ int TrackerController::tracked(int lastTracked, int *x, int *y, bool wait) {
 }
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

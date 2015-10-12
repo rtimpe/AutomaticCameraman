@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #ifndef BOOSTED_TRACKER_PUBLIC
 #define BOOSTED_TRACKER_PUBLIC
 
@@ -31,4 +32,4 @@ public:
 #endif
 
 
-
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

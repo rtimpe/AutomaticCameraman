@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #include "BoostedTracker.h"
 
 
@@ -127,4 +128,4 @@ bool BoostedTracker::new_location(Cluster *cluster, IplImage *gray, IplImage *di
 }
 
 
-
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

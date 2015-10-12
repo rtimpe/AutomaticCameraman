@@ -1,3 +1,4 @@
+#if 0 // COMMENTED_OUT_FOR_MAC_BUILD
 #include "BaseTracker.h"
 
 
@@ -255,3 +256,4 @@ bool BaseTracker::new_location(Cluster *cluster, IplImage *gray, IplImage *dispI
 }
 
 
+#endif // #if 0 // COMMENTED_OUT_FOR_MAC_BUILD

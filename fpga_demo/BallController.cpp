@@ -98,6 +98,7 @@ void* ballFunc(void *arg) {
 ////		std::cout << "x: " << ballController->vX << " y: " << ballController->vY << std::endl;
 //		usleep(10000);
 //	}
+    return 0;
 }
 
 void BallController::start() {

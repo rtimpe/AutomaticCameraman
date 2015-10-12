@@ -452,6 +452,8 @@ frame_saver_main_loop
     }
 
     cout << "Exiting frame_saver_mail_loop" << endl;
+
+    return 0;
 }
 
 
