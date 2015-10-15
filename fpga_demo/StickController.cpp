@@ -23,14 +23,20 @@ using std::queue;
 typedef StickEKF::Vector KVector;
 typedef StickEKF::Matrix KMatrix;
 
+std::vector<Vec2d> computeEndpoints(Vec2d center, double theta, int len);
+
 StickController::StickController
 (
     GridController *gc
 )
-: gc(gc), _end(false), p0(600, 400), p1(800, 400), tracking(false), center(700, 400), theta(3.14159265 / 2.0),
+: gc(gc), _end(false), tracking(false), center(700, 400), theta(3.14159265 / 2.0),
   _xrange(0), _yrange(0), _anglerange(0), _time_limit_s(10), _last_update_time_s(0),
   _stick_color(0, 0, 255, 255)
 {
+
+    std::vector<Vec2d> pts = computeEndpoints(center, theta, len);
+    p0 = pts[0];
+    p1 = pts[1];
 
     for(int i = -10; i <= 10; i += 5) {
         _xrange.push_back(i);
