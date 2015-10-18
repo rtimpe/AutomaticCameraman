@@ -48,6 +48,7 @@ public:
 	StickEKF sekf;
     cv::Vec2d p0;
     cv::Vec2d p1;
+    double avgR, avgG, avgB;
     static const int len = 80;
     static const int proximity = 150;
     cv::Vec2d center;

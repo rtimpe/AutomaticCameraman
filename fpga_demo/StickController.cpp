@@ -71,10 +71,18 @@ double minimumDistance(Vec2d v, Vec2d w, Vec2d p) {
   return cv::norm(p - projection);
 }
 
-double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d newCenter, Vec2d oldCenter,
-		double newTheta, double oldTheta) {
+struct CostFuncRet {
+    double cost;
+    double avgR;
+    double avgG;
+    double avgB;
+};
+
+CostFuncRet costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d newCenter, Vec2d oldCenter,
+		double newTheta, double oldTheta, double oldAvgR, double oldAvgG, double oldAvgB) {
 	double distTerm = 0.0;
 	int numActivated = 0;
+	double avgR, avgG, avgB = 0.0;
 	for (int i = 0; i < closeSquares.size(); i++) {
 		GridSquare &gs = closeSquares[i];
 
@@ -88,6 +96,9 @@ double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d 
 				dist = 0.000000001;
 			}
 			distTerm += 1.0 / dist;
+			avgR += gs.meanShortR;
+			avgG += gs.meanShortG;
+			avgB += gs.meanShortB;
 		}
 
 //		double coef = 1.0 / ((double) gs.timeOccupied / 10.0);
@@ -106,13 +117,23 @@ double costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d 
 	}
 	double cost = std::numeric_limits<double>::max();
 	if (numActivated > 5) {
+	    avgR /= (double) numActivated;
+	    avgG /= (double) numActivated;
+	    avgB /= (double) numActivated;
+
+	    double colorTerm = abs(avgR - oldAvgR) + abs(avgG - oldAvgG) + abs(avgB - oldAvgB);
 		double activatedTerm = 10.0 / numActivated;
 		double distTerm = cv::norm(newCenter - oldCenter);
 		double angleTerm = abs(newTheta - oldTheta);
 //		double denom = activatedTerm + distTerm + angleTerm;
-		cost = activatedTerm + angleTerm / 100.5 + distTerm / 4000.0;
+		cost = activatedTerm + angleTerm / 100.5 + distTerm / 4000.0 + colorTerm / 20.0;
 	}
-	return cost;
+	CostFuncRet ret;
+	ret.cost = cost;
+	ret.avgR = avgR;
+	ret.avgG = avgG;
+	ret.avgB = avgB;
+	return ret;
 }
 
 std::vector<Vec2d> computeEndpoints(Vec2d center, double theta, int len) {
@@ -202,10 +223,14 @@ void* stickFunc(void *arg) {
 						continue;
 					}
 
-					double cost = costFunc(closeSquares, pts[0], pts[1], newCenter, oldCenter, newTheta, oldTheta);
-					if (cost < minCost) {
+					CostFuncRet cfr = costFunc(closeSquares, pts[0], pts[1], newCenter, oldCenter, newTheta, oldTheta,
+					        sc->avgR, sc->avgG, sc->avgB);
+					if (cfr.cost < minCost) {
 					    tracking = true;
-						minCost = cost;
+						minCost = cfr.cost;
+						sc->avgR = cfr.avgR;
+						sc->avgG = cfr.avgG;
+						sc->avgB = cfr.avgB;
 						sc->center = newCenter;
 						sc->theta = newTheta;
 					}
