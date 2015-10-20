@@ -246,16 +246,19 @@ SaveVideo
 (
     FrameSaver *      fs,
     cv::VideoWriter & video_writer,
+    cv::VideoWriter & video_writer_annotated,
     IplImage *        bg_clone,
     IplImage *        fg_clone
 )
 {
-    static IplImage * fg_clone_3     = 0;
-    static IplImage * combined_frame = 0;
+    static IplImage * fg_clone_3      = 0;
+    static IplImage * annotated_frame = 0;
 
+    //-----------------------------------------------------------------
     // Initialize video if necessary
     if (!video_writer.isOpened())
     {
+        // Open non-annotated video
         stringstream ss;
         ss << VIDEO_FOLDER_NAME << "/video_"
            << get_current_datetime_string() << ".mpeg";
@@ -267,6 +270,20 @@ SaveVideo
                           true);
     }
 
+    if (!video_writer_annotated.isOpened())
+    {
+        // Open annotated video
+        stringstream ss;
+        ss << VIDEO_FOLDER_NAME << "/an_video_"
+           << get_current_datetime_string() <<".mpeg";
+        video_writer_annotated.open(ss.str(),
+                                    CV_FOURCC('P','I','M','1'),
+                                    45.0,
+                                    cv::Size(bg_clone->width, bg_clone->height),
+                                    true);
+    }
+
+    //-----------------------------------------------------------------
     // initialize cvImages if necessary
     if (!fg_clone_3)
     {
@@ -276,12 +293,12 @@ SaveVideo
                                    IPL_DEPTH_8U, 3);
     }
 
-    if (!combined_frame)
+    if (!annotated_frame)
     {
-        printf("[Creating combined_frame]\n");
-        combined_frame = cvCreateImage(cvSize(bg_clone->width,
-                                              bg_clone->height),
-                                       IPL_DEPTH_8U, 3);
+        printf("[Creating annotated_frame]\n");
+        annotated_frame = cvCreateImage(cvSize(bg_clone->width,
+                                               bg_clone->height),
+                                        IPL_DEPTH_8U, 3);
     }
 
     // We have to convert the 4 channel RGBA foreground image to
@@ -289,7 +306,6 @@ SaveVideo
     IppiSize roi;
     roi.width = fg_clone_3->width;
     roi.height = fg_clone_3->height;
-
 
     ippiCopy_8u_AC4C3R(
         reinterpret_cast<Ipp8u*>(fg_clone->imageData),
@@ -299,10 +315,11 @@ SaveVideo
         roi);
 
     // Combine background and foreground frames into one
-    cvAdd(bg_clone, fg_clone_3, combined_frame);
+    cvAdd(bg_clone, fg_clone_3, annotated_frame);
 
     // Save to video
-    video_writer.write(cv::Mat(combined_frame, false));
+    video_writer.write(cv::Mat(bg_clone, false));
+    video_writer_annotated.write(cv::Mat(annotated_frame, false));
 }
 
 
@@ -388,6 +405,7 @@ frame_saver_main_loop
 
     int nframes_captured = 0;
     cv::VideoWriter video_writer;
+    cv::VideoWriter video_writer_annotated;
 
     //-----------------------------------------------------------------
     // Loop until either the program ends, or there's nothing to do
@@ -410,7 +428,11 @@ frame_saver_main_loop
             ++nframes_captured;
             if (fs->_save_video)
             {
-                SaveVideo(fs, video_writer, bg_clone, fg_clone);
+                SaveVideo(fs, 
+                          video_writer, 
+                          video_writer_annotated,
+                          bg_clone, 
+                          fg_clone);
             }
         }
 
@@ -449,6 +471,11 @@ frame_saver_main_loop
     if (video_writer.isOpened())
     {
         video_writer.release();
+    }
+
+    if (video_writer_annotated.isOpened())
+    {
+        video_writer_annotated.release();
     }
 
     cout << "Exiting frame_saver_mail_loop" << endl;
