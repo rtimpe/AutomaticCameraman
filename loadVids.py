@@ -12,9 +12,10 @@ def main():
 			shutil.copyfile(sys.argv[1] + f, path)
 			iden = f.split('.')[0]
 			outputPath = sys.argv[2] + iden
-			os.mkdir(outputPath)
-			subprocess.call(['turkic', 'extract', path, outputPath])
+			if not os.path.exists(outputPath):
+				os.mkdir(outputPath)
+				subprocess.call(['turkic', 'extract', path, outputPath])
 
-			subprocess.call(['turkic', 'load', iden, outputPath, 'arm'])
+				subprocess.call(['turkic', 'load', iden, outputPath, 'arm'])
 
 main()
