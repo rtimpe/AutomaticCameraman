@@ -210,7 +210,8 @@ main
                            60,
                            videoPool,
                            stickController,
-                           grid_controller);
+                           grid_controller,
+                           debug_logger);
     game_controller->start();
 
 	//-----------------------------------------------------------------

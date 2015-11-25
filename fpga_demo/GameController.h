@@ -5,6 +5,7 @@
 #include "GridController.h"
 #include "StickController.h"
 #include "AudioPlayer.h"
+#include "DebugLogger.h"
 
 
 class FramePool;
@@ -37,7 +38,8 @@ public:
         int                   recording_duration,
         FramePool *           video_pool,
         StickController *     stick_controller,
-        GridController *      grid_controller
+        GridController *      grid_controller,
+        DebugLogger *         debug_logger
     );
 	~GameController(void);
 	void start(void);
@@ -76,6 +78,7 @@ public:
     std::string           _spin_wav_file_path;
     WavHandle *           _spin_wav_handle;
     AudioPlayer *         _audio_player;
+    DebugLogger *         _debug_logger;
 
 protected:
 

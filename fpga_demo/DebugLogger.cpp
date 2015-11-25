@@ -21,6 +21,7 @@ DebugLogger::DebugLogger
 )
 : _end(false), _log_buffer(0)
 {
+    this->driver = get_driver_instance();
     pthread_mutex_init(&_logger_mutex, NULL);
 }
 
@@ -48,6 +49,42 @@ DebugLogger::log
     pthread_mutex_unlock(&_logger_mutex);
 }
 
+
+void DebugLogger::recordGameScoreSQL(int score) {
+    pthread_mutex_lock(&_logger_mutex);
+
+    try {
+            sql::Connection * con = driver->connect("localhost", "root", "asdf");
+   //        con -> setAutoCommit(0);
+           con->setSchema("vatic");
+
+           sql::PreparedStatement * pstmt = con->prepareStatement("INSERT INTO tracker(id, score) VALUES(?, ?)");
+           pstmt->setString(1, get_current_datetime_string());
+           pstmt->setInt(2, score);
+           pstmt->executeUpdate();
+
+           delete con;
+           delete pstmt;
+
+       } catch (sql::SQLException &e) {
+         /*
+           MySQL Connector/C++ throws three different exceptions:
+
+           - sql::MethodNotImplementedException (derived from sql::SQLException)
+           - sql::InvalidArgumentException (derived from sql::SQLException)
+           - sql::SQLException (derived from std::runtime_error)
+         */
+         cout << "# ERR: SQLException in " << __FILE__;
+         cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+         /* what() (derived from std::runtime_error) fetches error message */
+         cout << "# ERR: " << e.what();
+         cout << " (MySQL error code: " << e.getErrorCode();
+         cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+
+       }
+
+    pthread_mutex_unlock(&_logger_mutex);
+}
 
 void
 DebugLogger::start

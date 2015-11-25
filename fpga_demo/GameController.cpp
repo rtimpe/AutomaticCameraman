@@ -24,7 +24,8 @@ GameController::GameController
     int                   recording_duration,
     FramePool *           video_pool,
     StickController *     stick_controller,
-    GridController *      grid_controller
+    GridController *      grid_controller,
+    DebugLogger *         debug_logger
 )
 : _toggleRecord(toggleRecord),
   _recording_started(false),
@@ -36,7 +37,8 @@ GameController::GameController
   _current_score(0),
   _stick_controller(stick_controller), _grid_controller(grid_controller),
   _spin_wav_file_path("assets/tone.wav"), _spin_wav_handle(0),
-  _audio_player(new AudioPlayer())
+  _audio_player(new AudioPlayer()),
+  _debug_logger(debug_logger)
 {
     _state_start_time = get_current_time_ms();
     _spin_wav_handle = _audio_player->loadWav(_spin_wav_file_path);
@@ -183,6 +185,9 @@ GameController::doRecordState
     {
         _toggleRecord();
         _recording_started = false;
+
+        // save the score as well
+        _debug_logger->recordGameScoreSQL(_current_score);
     }
 }
 
