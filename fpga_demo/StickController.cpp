@@ -126,7 +126,7 @@ CostFuncRet costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, V
 		double distTerm = cv::norm(newCenter - oldCenter);
 		double angleTerm = abs(newTheta - oldTheta);
 //		double denom = activatedTerm + distTerm + angleTerm;
-		cost = activatedTerm + angleTerm / 100.5 + distTerm / 4000.0 + colorTerm / 20.0;
+		cost = activatedTerm + angleTerm / 150.0 + distTerm / 10.0 + colorTerm / 20.0;
 	}
 	CostFuncRet ret;
 	ret.cost = cost;
