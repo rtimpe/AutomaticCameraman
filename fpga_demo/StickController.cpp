@@ -266,7 +266,7 @@ void* stickFunc(void *arg) {
         if (!sc->tracking) {
             sc->nonTrackingTime++;
 
-            if (sc->nonTrackingTime > 300) {
+            if (sc->nonTrackingTime > 400) {
                 sc->reset();
             }
         } else {
