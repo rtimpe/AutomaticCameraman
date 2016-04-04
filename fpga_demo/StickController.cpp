@@ -79,7 +79,7 @@ struct CostFuncRet {
 };
 
 CostFuncRet costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, Vec2d newCenter, Vec2d oldCenter,
-		double newTheta, double oldTheta, double oldAvgR, double oldAvgG, double oldAvgB) {
+		double newTheta, double oldTheta, double oldAvgR, double oldAvgG, double oldAvgB, KVector newPos) {
 	double distTerm = 0.0;
 	int numActivated = 0;
 	double avgR, avgG, avgB = 0.0;
@@ -123,10 +123,12 @@ CostFuncRet costFunc(std::vector<GridSquare> closeSquares, Vec2d p0, Vec2d p1, V
 
 	    double colorTerm = abs(avgR - oldAvgR) + abs(avgG - oldAvgG) + abs(avgB - oldAvgB);
 		double activatedTerm = 10.0 / numActivated;
-		double distTerm = cv::norm(newCenter - oldCenter);
+		Vec2d predCenter(newPos(1), newPos(2));
+		double distTerm = cv::norm(newCenter - predCenter);
 		double angleTerm = abs(newTheta - oldTheta);
 //		double denom = activatedTerm + distTerm + angleTerm;
-		cost = 10.0 * activatedTerm + angleTerm / 200.0 + distTerm / 10.0 + colorTerm / 20.0;
+		cost = activatedTerm;// + distTerm;
+		//		cost = 10.0 * activatedTerm + angleTerm / 200.0 + distTerm * 10.0 + colorTerm / 20.0;
 	}
 	CostFuncRet ret;
 	ret.cost = cost;
@@ -204,6 +206,9 @@ void* stickFunc(void *arg) {
 		// shuffle the x, y, and angle values
 	    sc->shuffle();
 
+	    KVector u;
+        KVector X = sc->sekf.predict(u);
+
 	    for (unsigned int xind = 0; xind < sc->_xrange.size(); ++xind)
 	    {
             int i = sc->_xrange[xind];
@@ -224,7 +229,7 @@ void* stickFunc(void *arg) {
 					}
 
 					CostFuncRet cfr = costFunc(closeSquares, pts[0], pts[1], newCenter, oldCenter, newTheta, oldTheta,
-					        sc->avgR, sc->avgG, sc->avgB);
+					        sc->avgR, sc->avgG, sc->avgB, X);
 					if (cfr.cost < minCost) {
 					    tracking = true;
 						minCost = cfr.cost;
@@ -238,19 +243,15 @@ void* stickFunc(void *arg) {
 			}
 		}
 
-		// kalman stuff
-		KVector u;
-		KVector v(3, 1);
-		v(1) = sc->center[0];
-		v(2) = sc->center[1];
-		v(3) = sc->theta;
+        KVector v(3, 1);
+        v(1) = sc->center[0];
+        v(2) = sc->center[1];
+        v(3) = sc->theta;
 
-		sc->sekf.step(u, v);
-		//cout << sc->sekf.getX()(1) << " " << sc->sekf.getX()(2) << endl;
-		//cout << "sc pos: " << sc->center[0] << endl;
+        sc->sekf.step(u, v);
+        X = sc->sekf.getX();
 
-		KVector X = sc->sekf.getX();
-		sc->center[0] = X(1);
+        sc->center[0] = X(1);
 		sc->center[1] = X(3);
 		sc->theta = X(5);
 
